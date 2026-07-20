@@ -1,0 +1,241 @@
+# Teknon Solutions — Website
+
+A complete React + Vite + Tailwind site for Teknon Solutions, built from your brief: hero, stats,
+about, why-choose-us, programs, technologies, training process, courses (with search/filter),
+student benefits, testimonials, gallery, pricing, FAQ, CTA, contact form, and footer — plus dark
+mode, a floating WhatsApp button, and scroll animations throughout.
+
+> Note: your message said the domain is **ateknonsolutions.com**. Every instruction below uses
+> that exact spelling. If that was a typo and you actually meant `teknonsolutions.com`, just
+> swap it in wherever you see it.
+
+---
+
+## 1. Before you launch — things to personalize
+
+The site is fully built and ready to deploy, but a few pieces are placeholders you should swap
+out before going live:
+
+| What | Where | Why |
+|---|---|---|
+| Contact form won't send email yet | `.env.example` → `RESEND_API_KEY` | Submits to a real `/api/enquiry` backend now (stores to Supabase + emails via Resend), but needs a free [Resend](https://resend.com) API key set in Vercel first. Until then, it automatically falls back to WhatsApp — nothing is ever lost either way. See **Section 4.5** below. |
+| Admin login isn't connected yet | `.env.example` → `VITE_SUPABASE_URL` etc. | Needs a free [Supabase](https://supabase.com) project — see **Section 4.5**. |
+| Social media links go nowhere (`#`) | `src/data/siteData.js` → `SOCIAL_LINKS` | Add your real Instagram/LinkedIn/GitHub/Facebook/YouTube URLs. |
+| Gallery shows labeled placeholder tiles, not real photos | `src/components/Gallery.jsx` | Intentional — swap these for real classroom/workshop/hackathon photos when you have them. I avoided using random stock photos so nothing on the site misrepresents your actual classes. |
+| Testimonials are illustrative samples | `src/data/siteData.js` → `TESTIMONIALS` | Written to match the tone you described, but they're not real students yet. Replace with real quotes once you have them — this matters for trust/credibility. |
+| Founder quote | `src/components/About.jsx` | Pulled from your reference image (William Carie Amudala). Edit the quote text if you'd like something more specific. |
+
+Everything else — pricing, program details, tech stack, FAQ, contact info — is already filled in
+from your brief and editable in **`src/data/siteData.js`**, which is written as one central file
+specifically so you (or anyone) can update content without touching component code.
+
+---
+
+## 2. Preview it locally (optional)
+
+Only needed if you want to see it on your own computer before deploying. Requires
+[Node.js](https://nodejs.org) (v18+) installed.
+
+```bash
+npm install
+npm run dev
+```
+
+Then open the local URL it prints (usually `http://localhost:5173`).
+
+To build the production version yourself: `npm run build` (outputs to `dist/`).
+
+---
+
+## 3. Deploy — easiest path (no terminal required)
+
+**Step A — Put the project on GitHub**
+1. Create a free account at [github.com](https://github.com) if you don't have one.
+2. Click **New repository**, name it `teknon-solutions`, keep it Public or Private, click **Create**.
+3. On the new repo page, click **uploading an existing file**, then drag in *all the files and
+   folders* from this project (everything except `node_modules`, which doesn't exist yet anyway).
+4. Commit the files.
+
+**Step B — Deploy on Vercel**
+1. Create a free account at [vercel.com](https://vercel.com) (sign up with GitHub — one click).
+2. Click **Add New → Project**, select your `teknon-solutions` repo, click **Import**.
+3. Vercel auto-detects Vite — leave the defaults, click **Deploy**.
+4. In 1–2 minutes you'll get a live link like `teknon-solutions.vercel.app`. That's your site, live.
+
+*(Netlify works identically: [netlify.com](https://netlify.com) → **Add new site → Import an
+existing project** → pick the same GitHub repo → deploy.)*
+
+---
+
+## 4. Connect ateknonsolutions.com (GoDaddy → Vercel)
+
+1. In your Vercel project, go to **Settings → Domains** → enter `ateknonsolutions.com` → **Add**.
+2. Vercel will show you DNS records to add. They'll look like this:
+
+   | Type | Name | Value |
+   |---|---|---|
+   | A | `@` | `76.76.21.21` |
+   | CNAME | `www` | `cname.vercel-dns.com` |
+
+   (Use the exact values Vercel shows you on that screen — they occasionally update their IPs.)
+
+3. Log into **GoDaddy** → **My Products** → find `ateknonsolutions.com` → **DNS** → **Manage DNS**.
+4. Under DNS Records:
+   - Edit (or add) the **A** record: Name `@`, Value `76.76.21.21`, TTL default.
+   - Edit (or add) the **CNAME** record: Name `www`, Value `cname.vercel-dns.com`.
+   - Delete any conflicting default GoDaddy "Parked Domain" A/CNAME records pointing elsewhere.
+5. Save. DNS changes usually go live in 10–60 minutes (occasionally up to 24 hours).
+6. Back in Vercel, the domain will show **Valid Configuration** once it detects the change — HTTPS
+   is issued automatically, no extra steps needed.
+
+**If you deploy to Netlify instead:** Site settings → Domain management → Add custom domain →
+Netlify will give you an A record (`75.2.60.5`) for `@` and a CNAME for `www` pointing to your
+`[yoursite].netlify.app` — same GoDaddy steps as above, just with Netlify's values.
+
+---
+
+## 4.5. Backend & admin login setup
+
+The contact form and `/admin` login are real, working code now — but they need credentials from
+you before they actually do anything, because I can't create accounts or connect to services on
+your behalf. Two independent services, ~10 minutes total:
+
+**A. Email (Resend) — makes the contact form send real email**
+1. Sign up free at [resend.com](https://resend.com) → **API Keys** → **Create API Key**.
+2. In Vercel: **Project → Settings → Environment Variables** → add `RESEND_API_KEY` with that value.
+3. Redeploy (Vercel → Deployments → ⋯ → Redeploy). Test by submitting the contact form, or by
+   visiting `yoursite.com/api/health` — it'll show `"resend_configured": true` once it's live.
+4. By default it sends from `onboarding@resend.dev` (works immediately, no setup). Once you want
+   email arriving from `@ateknonsolutions.com`, add and verify that domain in Resend's dashboard,
+   then change the `from` address in `api/enquiry.js`.
+
+**B. Auth + database (Supabase) — makes `/admin/login` work and stores enquiries**
+1. Sign up free at [supabase.com](https://supabase.com/dashboard) → **New Project**.
+2. Once it's created: **SQL Editor** → **New query** → paste the entire contents of
+   `supabase/schema.sql` from this project → **Run**. This creates the `profiles` and `enquiries`
+   tables with the correct permissions.
+   > Already set Supabase up before this update? Don't re-run `schema.sql` — instead run
+   > `supabase/002_enrich_enquiries.sql`, which safely adds the new fields (college, year,
+   > source page, IP, user agent) and status options to your existing `enquiries` table.
+3. **Project Settings → API** → copy three values:
+   - `Project URL` → Vercel env var `VITE_SUPABASE_URL`
+   - `anon public` key → Vercel env var `VITE_SUPABASE_ANON_KEY`
+   - `service_role` key → Vercel env var `SUPABASE_SERVICE_ROLE_KEY` (⚠️ keep this one secret —
+     never put `VITE_` in front of it, never commit it, never share it)
+4. Redeploy.
+5. **Create your own admin account** (there's no public sign-up page by design — staff accounts
+   aren't self-serve):
+   - Supabase Dashboard → **Authentication → Users → Add user** → enter your email + a password.
+   - Back in **SQL Editor**, run:
+     ```sql
+     update public.profiles set role = 'admin' where id =
+       (select id from auth.users where email = 'you@ateknonsolutions.com');
+     ```
+   - Now go to `yoursite.com/admin/login` and sign in with that email/password.
+
+Neither of these blocks the other — the site works fine with just one configured, or neither
+(contact form falls back to WhatsApp, `/admin/login` shows a clear "not connected yet" message
+instead of pretending to work).
+
+---
+
+## 4.6. People admin (Students & Faculty)
+
+Once you're signed in as an admin at `/admin`, there's a **People** tab alongside Enquiries.
+
+- **Add Person** creates a real account and emails them an invite link to set their own password —
+  you type in name, email, phone, and pick Student or Faculty. You never see or handle a password.
+- The invite email is sent by **Supabase's own built-in auth email** — separate from Resend, no
+  extra setup needed, though Supabase's default sender has low volume limits meant for getting
+  started. For real usage past a handful of invites, configure custom SMTP under Supabase
+  **Authentication → Settings → SMTP Settings** (their free-tier default is not meant for volume).
+- Faculty can view the whole roster (they need to see their students) but can't add people or
+  change anyone's role — that stays admin-only, enforced both in the UI and by the database's Row
+  Level Security policies (so it's not just a UI restriction someone could bypass).
+- "Deactivate" is a soft action (`status = 'inactive'`) — it doesn't delete the account, just
+  flags it. Reactivate any time.
+- Admin accounts are **never** created through this UI on purpose — that stays the manual SQL
+  process in section 4.5, since it's the most sensitive role in the system.
+
+Already ran `schema.sql` before this update? Run `supabase/003_people_admin.sql` too — it adds the
+columns and permissions this needs (including backfilling email onto existing accounts, which
+`profiles` didn't store before now).
+
+---
+
+## 4.7. Payments (Razorpay)
+
+The Pricing section now has real "Pay Now" buttons on the Starter/Professional/Advanced tiers
+(Enterprise stays a "Contact us" CTA since it's Custom pricing). ~10 minutes to set up:
+
+1. Sign up free at [dashboard.razorpay.com/signup](https://dashboard.razorpay.com/signup).
+2. Stay in **Test Mode** first (the toggle in the top-right of the dashboard) — this lets you run
+   the entire checkout flow with test card numbers and no real money before going live.
+3. **Settings → API Keys → Generate Test Key** → copy the Key ID and Key Secret.
+4. In Vercel: **Project → Settings → Environment Variables** → add `RAZORPAY_KEY_ID` and
+   `RAZORPAY_KEY_SECRET`.
+5. Redeploy, then try a payment yourself — Razorpay's test-mode card number is
+   `4111 1111 1111 1111` with any future expiry date and any CVV.
+6. Optional but recommended before taking real money: **Settings → Webhooks → Add New Webhook**,
+   URL `https://yoursite.com/api/razorpay-webhook`, subscribe to the `payment.captured` event, and
+   add the webhook secret it gives you as `RAZORPAY_WEBHOOK_SECRET` in Vercel too. This is a
+   reliability backstop — if someone pays but closes the tab before the browser can confirm it,
+   the webhook (delivered straight from Razorpay's servers, not the customer's browser) still
+   records the payment. Checkout works without it, just slightly less robust against that one
+   edge case.
+7. When you're ready for real payments: **Settings → API Keys → Generate Live Key**, and swap the
+   two Vercel env vars for the live values. Razorpay requires KYC/business verification before
+   activating live mode — that's their process, not something to configure here.
+
+Every payment amount is resolved server-side from a fixed price map (`api/_lib/pricing.js`) — the
+browser only ever sends which tier was selected, never an amount, so the checkout can't be tricked
+into charging less than the real price. Payment success is verified via Razorpay's cryptographic
+signature (`api/verify-payment.js`) before anything is recorded — a fabricated "success" POSTed
+straight to that endpoint without a valid signature is rejected.
+
+---
+
+## 5. Project structure
+
+```
+api/
+  enquiry.js               ← POST endpoint: validates, stores to Supabase, emails via Resend
+  health.js                ← GET /api/health — confirms what's configured, without leaking secrets
+  admin/create-person.js   ← POST endpoint: admin-only, invites a new student/faculty account
+supabase/
+  schema.sql                ← run once in Supabase's SQL editor: profiles + enquiries tables, RLS
+  002_enrich_enquiries.sql  ← run this too if you set up Supabase before this update
+  003_people_admin.sql      ← run this too if you set up Supabase before the People admin module
+  004_student_self_service.sql ← run this too if you set up Supabase before the student portal
+src/
+  data/siteData.js       ← almost all editable content lives here
+  components/            ← one file per section (Hero, Programs, Pricing, etc.)
+  components/admin/       ← ProtectedRoute (auth guard), AdminLayout (shared header + nav)
+  pages/                   ← MarketingSite, AdminLogin, AdminDashboard, AdminPeople
+  hooks/                 ← scroll-reveal, count-up, and typewriter animation logic
+  context/ThemeContext.jsx ← dark mode
+  context/AuthContext.jsx  ← session + role, sign in/out
+  lib/supabaseClient.js    ← the Supabase browser client
+  App.jsx                 ← routes: "/" marketing site, "/admin/login", "/admin/*" (protected, nested)
+  index.css               ← design tokens, colors, custom utility classes
+tailwind.config.js         ← brand colors/fonts (navy, royal blue, accent blue)
+```
+
+## 6. What wasn't included (happy to build next)
+
+Enquiries, People, Analytics, and a real Student portal (`/student/login` → `/student`) are all
+real now. What a student actually gets today: their own profile (editable name/phone), and their
+own enquiry history matched by email — not Courses, Progress, Assignments, Certificates,
+Downloads, or Attendance, because none of that data exists anywhere in the system yet. Building
+empty tabs for those would look done without being done, so they're not there. Next up: bulk-
+importing student accounts from a list of emails, WhatsApp automation via Meta's Cloud API (queued
+on your business verification), Courses admin, a CMS for editing site content without code,
+Certificates, Assignments, a blog section, a careers page, and an events page.
+
+## 7. Performance note
+
+`src/App.jsx` lazy-loads everything under `/admin` and `/student` — confirmed via a real Vercel
+build log that the public marketing site's bundle no longer ships `recharts` (or any admin/student
+code) to visitors who never log in. If you add more heavy libraries to the admin or student side
+later, keep them behind that same `lazy()` boundary rather than importing them at the top of
+`App.jsx`, or they'll leak back into the bundle everyone downloads.

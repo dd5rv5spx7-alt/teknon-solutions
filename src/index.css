@@ -1,0 +1,221 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: 'Inter', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', sans-serif;
+  }
+
+  section[id] {
+    scroll-margin-top: 96px;
+  }
+
+  /* Visible keyboard focus, always */
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: 2px solid #1E5EFF;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  ::selection {
+    background: rgba(30, 94, 255, 0.18);
+  }
+}
+
+@layer utilities {
+  .container-px {
+    @apply px-6 sm:px-8 lg:px-12;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-royal to-accent;
+  }
+
+  .bg-grad-primary {
+    background: linear-gradient(135deg, #1E5EFF 0%, #2F80ED 100%);
+  }
+
+  .bg-grad-navy {
+    background: linear-gradient(160deg, #0B1F4D 0%, #071633 100%);
+  }
+
+  .btn-glow {
+    box-shadow: 0 4px 20px -4px rgba(30, 94, 255, 0.5);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+  }
+
+  .btn-glow:hover {
+    box-shadow: 0 8px 30px -4px rgba(30, 94, 255, 0.65);
+    transform: translateY(-2px);
+  }
+
+  .glass {
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+  }
+
+  .glass-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+  }
+
+  .dark .glass-light {
+    background: rgba(19, 40, 94, 0.55);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .reveal.in-view {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .reveal-delay-1 { transition-delay: 0.08s; }
+  .reveal-delay-2 { transition-delay: 0.16s; }
+  .reveal-delay-3 { transition-delay: 0.24s; }
+  .reveal-delay-4 { transition-delay: 0.32s; }
+  .reveal-delay-5 { transition-delay: 0.4s; }
+  .reveal-delay-6 { transition-delay: 0.48s; }
+
+  .eyebrow {
+    @apply font-mono text-xs tracking-[0.2em] uppercase font-medium inline-flex items-center gap-2;
+  }
+
+  .cursor-blink {
+    animation: blink 1s step-start infinite;
+  }
+
+  .bg-dot-grid {
+    background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .bg-dot-grid-light {
+    background-image: radial-gradient(rgba(11, 31, 77, 0.1) 1px, transparent 1px);
+    background-size: 22px 22px;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  /* Isolates a single certificate for printing — everything else on the
+     page is hidden so "Print" doesn't dump the whole dashboard chrome. */
+  @media print {
+    body * {
+      visibility: hidden;
+    }
+    .certificate-print-area,
+    .certificate-print-area * {
+      visibility: visible;
+    }
+    .certificate-print-area {
+      position: fixed;
+      inset: 0;
+    }
+  }
+
+  .modal-input {
+    @apply w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:border-royal/50 transition-colors;
+  }
+
+  /* Cursor-tracking spotlight glow for cards. --x/--y set on mousemove. */
+  .spotlight {
+    position: relative;
+    overflow: hidden;
+  }
+  .spotlight::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: radial-gradient(280px circle at var(--x, 50%) var(--y, 50%), rgba(30, 94, 255, 0.10), transparent 70%);
+    opacity: 0;
+    transition: opacity 0.5s ease;
+    pointer-events: none;
+  }
+  .dark .spotlight::before {
+    background: radial-gradient(280px circle at var(--x, 50%) var(--y, 50%), rgba(47, 128, 237, 0.16), transparent 70%);
+  }
+  .spotlight:hover::before {
+    opacity: 1;
+  }
+  .spotlight > * {
+    position: relative;
+    z-index: 1;
+  }
+
+  /* Thin gradient line that grows in from center on hover */
+  .edge-accent::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    width: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #1E5EFF, #2F80ED);
+    transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+    transform: translateX(-50%);
+    z-index: 1;
+    border-radius: 0 0 3px 3px;
+  }
+  .edge-accent:hover::after {
+    width: 50%;
+  }
+
+  /* Quick shine sweep, used sparingly on ribbon badges */
+  .shine {
+    position: relative;
+    overflow: hidden;
+  }
+  .shine::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -60%;
+    width: 45%;
+    height: 100%;
+    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+    animation: shine-sweep 3.6s ease-in-out infinite;
+  }
+  @keyframes shine-sweep {
+    0% { left: -60%; }
+    18% { left: 130%; }
+    100% { left: 130%; }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0B1F4D" />
+
+    <!-- Fallback title only: description/robots/canonical/OG/Twitter are
+         owned by <Seo> (src/components/Seo.jsx, via react-helmet-async) so
+         every route gets correct values. Title is safe to duplicate here —
+         Helmet overwrites document.title directly rather than inserting a
+         second node — but meta/link tags aren't: keeping both copies of
+         those produces two conflicting canonical/og tags per page, which
+         search engines resolve by discarding both rather than picking one.
+         Non-JS bots (Facebook/WhatsApp/LinkedIn/Slack/X preview crawlers)
+         never run Helmet, so a shared blog-post link still shows this
+         fallback rather than the post's own card — fixing that needs
+         server-side tag injection or prerendering, out of scope here. -->
+    <title>A Teknon Solutions | IT Internship &amp; Training Institute, Rajahmundry</title>
+    <meta name="keywords" content="IT Training Institute, Internship Programs, Software Training, Python Training, Java Training, React Training, Full Stack Course, Cybersecurity Training, AI Training, Online Internship, Offline Internship, Rajahmundry Training Institute, Best Internship Institute, Coding Institute, Tech Training" />
+    <meta name="author" content="A Teknon Solutions" />
+
+    <!-- Structured Data: Organization + EducationalOrganization -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": ["Organization", "EducationalOrganization"],
+          "@id": "https://www.ateknonsolutions.com/#organization",
+          "name": "A Teknon Solutions",
+          "alternateName": "A Teknon Solutions IT Training",
+          "url": "https://www.ateknonsolutions.com/",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://www.ateknonsolutions.com/favicon.svg",
+            "width": 64,
+            "height": 64
+          },
+          "image": "https://www.ateknonsolutions.com/og-image.png",
+          "description": "A Teknon Solutions is an IT education and training provider in Rajahmundry, Andhra Pradesh. We offer industry-oriented internships, live projects, expert mentorship, and career-focused training in Python, Full Stack, Java, AI, Cybersecurity, and more.",
+          "foundingDate": "2024",
+          "founder": {
+            "@type": "Person",
+            "name": "William Carie Amudala"
+          },
+          "contactPoint": {
+            "@type": "ContactPoint",
+            "telephone": "+91-8897571616",
+            "contactType": "admissions",
+            "areaServed": "IN",
+            "availableLanguage": ["English", "Telugu"]
+          },
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Rajahmundry",
+            "addressRegion": "Andhra Pradesh",
+            "addressCountry": "IN"
+          },
+          "sameAs": [],
+          "hasOfferCatalog": {
+            "@type": "OfferCatalog",
+            "name": "IT Internship Programs",
+            "itemListElement": [
+              {
+                "@type": "Course",
+                "name": "Two Week IT Internship",
+                "description": "Perfect for beginners. Programming fundamentals plus 1 core language.",
+                "provider": { "@id": "https://www.ateknonsolutions.com/#organization" },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "1999",
+                  "priceCurrency": "INR",
+                  "availability": "https://schema.org/InStock"
+                }
+              },
+              {
+                "@type": "Course",
+                "name": "Four Week IT Internship",
+                "description": "Strengthen your foundation with practical assignments and live projects.",
+                "provider": { "@id": "https://www.ateknonsolutions.com/#organization" },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "3999",
+                  "priceCurrency": "INR",
+                  "availability": "https://schema.org/InStock"
+                }
+              },
+              {
+                "@type": "Course",
+                "name": "Eight Week Advanced IT Internship",
+                "description": "Advanced learning with live projects, portfolio development and dedicated mentorship.",
+                "provider": { "@id": "https://www.ateknonsolutions.com/#organization" },
+                "offers": {
+                  "@type": "Offer",
+                  "price": "6999",
+                  "priceCurrency": "INR",
+                  "availability": "https://schema.org/InStock"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "@type": "LocalBusiness",
+          "@id": "https://www.ateknonsolutions.com/#localbusiness",
+          "name": "A Teknon Solutions",
+          "url": "https://www.ateknonsolutions.com/",
+          "telephone": "+91-8897571616",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Rajahmundry",
+            "addressRegion": "Andhra Pradesh",
+            "addressCountry": "IN"
+          },
+          "priceRange": "₹1999 - ₹6999",
+          "openingHours": "Mo-Sa 09:00-18:00"
+        },
+        {
+          "@type": "FAQPage",
+          "mainEntity": [
+            {
+              "@type": "Question",
+              "name": "Who can join A Teknon Solutions?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Anyone looking to build practical IT skills — college students, recent graduates, and working professionals looking to upskill. Programs are structured for beginners through to advanced learners."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Do I need coding experience?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "No prior experience is required for our Starter and Foundation programs — we start from the fundamentals. If you already code, you can move straight into an Advanced or Custom track."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is the internship online?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "You can choose either — we run both online and offline (in-person, Rajahmundry) classes, so pick whichever fits your schedule and location."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Will I receive a certificate?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Every program, from the 2-week Starter track to Custom Learning, ends with a certificate you can add to your resume and LinkedIn profile."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Are projects included?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes — every program includes hands-on projects, scaling from mini projects in the 2-week track up to a full live project and portfolio in the 8-week Advanced track."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Is placement assistance available?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Yes. Alongside training, we support resume building, LinkedIn optimization, mock interviews and career guidance to help you move toward placement."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "Can college students join?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Absolutely — many of our students join alongside their degree. Flexible timings and both online/offline options make it easy to fit around your academic schedule."
+              }
+            },
+            {
+              "@type": "Question",
+              "name": "What is the duration?",
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": "Programs run from 2 to 8 weeks, or a fully custom duration built around your goals — see the Programs section above for details on each track."
+              }
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Dark-mode flash prevention: applies saved theme before first paint.
+         External file (not inline) so it stays allowed under a strict
+         script-src CSP with no 'unsafe-inline'. -->
+    <script src="/theme-init.js"></script>
+
+    <!-- Fonts: preconnect then stylesheet -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-white text-navy antialiased selection:bg-royal/20 selection:text-navy">
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
+  </body>
+</html>

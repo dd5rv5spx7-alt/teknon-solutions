@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(unzip -l \"/Users/mukeshvasudhar/Downloads/files.zip\")",
+      "Bash(curl -sI -o /dev/null -w \"%{http_code}\\\\n\" \"https://source.unsplash.com/800x600/?classroom\" --max-time 10)",
+      "Bash(curl -sI -o /dev/null -w \"%{http_code}\\\\n\" \"https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80\" --max-time 10)",
+      "Bash(curl -sI -o /dev/null -w \"%{http_code}\\\\n\" \"https://picsum.photos/800/600\" --max-time 10)",
+      "Bash(curl -sI \"https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=800&q=80\" --max-time 10)",
+      "Bash(curl -sI \"https://images.unsplash.com/photo-9999999999999-000000000000?w=800&q=80\" --max-time 10)",
+      "Bash(curl -sI -o /dev/null -w \"%{http_code}\\\\n\" -X GET \"https://picsum.photos/800/600\" --max-time 10)",
+      "Bash(python3 -c ' *)",
+      "mcp__94e27706-21d0-47d9-b955-a3e881aa816a__list_projects",
+      "mcp__94e27706-21d0-47d9-b955-a3e881aa816a__get_project",
+      "Bash(which sips rsvg-convert inkscape cairosvg convert qlmanage 2>&1 *)",
+      "Bash('/Applications/Google Chrome.app/Contents/MacOS/Google Chrome' --headless=new --disable-gpu --hide-scrollbars --window-size=1200,630 --screenshot=/private/tmp/claude-501/-Users-mukeshvasudhar-Downloads-teknon-solutions-12/f8021827-c1f1-41d2-bfd0-a195ec088340/scratchpad/og-image.png file:///private/tmp/claude-501/-Users-mukeshvasudhar-Downloads-teknon-solutions-12/f8021827-c1f1-41d2-bfd0-a195ec088340/scratchpad/og-render.html)"
+    ]
+  }
+}
