@@ -378,37 +378,37 @@ export const GALLERY_CATEGORIES = [
   {
     label: 'Classroom Sessions',
     icon: GraduationCap,
-    image: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1571260899304-425eee4c7efc?w=800&q=80&auto=format',
     alt: 'Students seated at desks during a classroom training session',
   },
   {
     label: 'Workshops',
     icon: Users,
-    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1531482615713-2afd69097998?w=800&q=80&auto=format',
     alt: 'Two students reviewing code together on a laptop during a hands-on workshop',
   },
   {
     label: 'Live Coding',
     icon: Code2,
-    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=800&q=80&auto=format',
     alt: 'Laptop screen showing lines of code during a live coding session',
   },
   {
     label: 'Hackathons',
     icon: Trophy,
-    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?w=800&q=80&auto=format',
     alt: 'Large group of participants working on laptops during a hackathon',
   },
   {
     label: 'Certificates & Achievements',
     icon: Award,
-    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?w=800&q=80&auto=format',
     alt: 'Graduates throwing their caps in the air to celebrate their achievement',
   },
   {
     label: 'Events',
     icon: Calendar,
-    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80',
+    image: 'https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=800&q=80&auto=format',
     alt: 'Audience seated at an A Teknon Solutions community event',
   },
 ];

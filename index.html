@@ -195,13 +195,8 @@
          script-src CSP with no 'unsafe-inline'. -->
     <script src="/theme-init.js"></script>
 
-    <!-- Fonts: preconnect then stylesheet -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap"
-      rel="stylesheet"
-    />
+    <!-- Fonts are self-hosted via @fontsource, imported in src/main.jsx —
+         no external Google Fonts request chain needed. -->
   </head>
   <body class="bg-white text-navy antialiased selection:bg-royal/20 selection:text-navy">
     <div id="root"></div>
