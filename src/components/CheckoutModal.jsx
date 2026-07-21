@@ -30,6 +30,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [couponCode, setCouponCode] = useState('');
   const [error, setError] = useState('');
   const [visible, setVisible] = useState(false); // drives the fade/scale transition
 
@@ -108,7 +109,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
       const orderRes = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier, name, email, phone }),
+        body: JSON.stringify({ tier, name, email, phone, coupon_code: couponCode.trim() || undefined }),
       });
       const order = await orderRes.json();
       if (!orderRes.ok || !order.ok) {
@@ -267,6 +268,21 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
               />
             </div>
 
+            <div>
+              <label htmlFor="checkout-coupon" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+                Coupon code <span className="text-slatesoft dark:text-white/40 font-normal">(optional)</span>
+              </label>
+              <input
+                id="checkout-coupon"
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                disabled={step === 'processing'}
+                placeholder="e.g. WELCOME10"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:border-royal/50 disabled:opacity-50 uppercase placeholder:normal-case"
+              />
+            </div>
+
             {error && (
               <div role="alert" className="flex gap-2 rounded-xl border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-600 dark:text-red-300">
                 <AlertCircle size={14} className="shrink-0 mt-0.5" />
@@ -282,6 +298,11 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
               {step === 'processing' && <Loader2 size={16} className="animate-spin" />}
               {step === 'processing' ? 'Opening secure checkout…' : `Pay ${priceDisplay}`}
             </button>
+            {couponCode.trim() && (
+              <p className="text-[11px] text-center text-slatesoft dark:text-white/40 -mt-2">
+                Coupon is applied at checkout — the payment screen will show your discounted total.
+              </p>
+            )}
           </form>
         )}
       </div>

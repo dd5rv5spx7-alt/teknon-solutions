@@ -2,11 +2,14 @@
 // Creates a Razorpay order for one of the fixed course tiers. The amount is
 // always resolved server-side from TIER_PRICES — the client only sends a
 // tier key, never a price, so this endpoint can't be tricked into creating
-// an order for less than the real amount.
+// an order for less than the real amount. A coupon code, if supplied,
+// follows the same rule: the browser sends a code, never a discount value —
+// see api/_lib/coupons.js.
 
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
 import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
+import { validateCoupon } from './_lib/coupons.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 8 }; // 8 order attempts / 10 min / IP
@@ -30,6 +33,7 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
   const { tier, name, email, phone } = body;
+  const rawCouponCode = body.coupon_code ? String(body.coupon_code).trim().toUpperCase().slice(0, 50) : '';
 
   const tierInfo = TIER_PRICES[tier];
   if (!tierInfo) {
@@ -50,6 +54,24 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: 'Payments are not configured yet on this deployment.' });
   }
 
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  let discountAmount = 0;
+  let appliedCouponCode = null;
+  if (rawCouponCode) {
+    if (!supabaseUrl || !serviceKey) {
+      return res.status(400).json({ ok: false, error: 'Coupons aren’t available on this deployment.' });
+    }
+    const validation = await validateCoupon(supabaseUrl, serviceKey, rawCouponCode, tier, tierInfo.amount);
+    if (validation.error) {
+      return res.status(400).json({ ok: false, error: validation.error });
+    }
+    discountAmount = validation.discountAmount;
+    appliedCouponCode = rawCouponCode;
+  }
+  const finalAmount = tierInfo.amount - discountAmount;
+
   let order;
   try {
     const orderRes = await fetch('https://api.razorpay.com/v1/orders', {
@@ -59,7 +81,7 @@ export default async function handler(req, res) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        amount: tierInfo.amount,
+        amount: finalAmount,
         currency: 'INR',
         receipt: `teknon_${tier}_${Date.now()}`,
         notes: {
@@ -67,6 +89,8 @@ export default async function handler(req, res) {
           name: String(name).trim().slice(0, 200),
           email: String(email).trim().slice(0, 200),
           phone: String(phone).trim().slice(0, 30),
+          coupon_code: appliedCouponCode || '',
+          discount_amount: String(discountAmount),
         },
       }),
     });
@@ -85,8 +109,6 @@ export default async function handler(req, res) {
   // no lead, no admin visibility. A failure here doesn't block checkout;
   // api/verify-payment.js and api/razorpay-webhook.js both fall back to
   // inserting a fresh row directly if no 'created' row exists to claim.
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (supabaseUrl && serviceKey) {
     try {
       await fetch(`${supabaseUrl}/rest/v1/payments`, {
@@ -102,10 +124,12 @@ export default async function handler(req, res) {
           email: String(email).trim().slice(0, 200),
           phone: String(phone).trim().slice(0, 30),
           tier,
-          amount: tierInfo.amount,
+          amount: finalAmount,
           currency: 'INR',
           razorpay_order_id: order.id,
           status: 'created',
+          coupon_code: appliedCouponCode,
+          discount_amount: discountAmount,
         }),
       });
     } catch (err) {
@@ -119,6 +143,6 @@ export default async function handler(req, res) {
     amount: order.amount,
     currency: order.currency,
     key_id: keyId, // public identifier — required by Razorpay's client-side checkout, safe to expose
+    discount_amount: discountAmount,
   });
 }
-

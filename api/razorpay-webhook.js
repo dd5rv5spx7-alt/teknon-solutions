@@ -117,17 +117,21 @@ export default async function handler(req, res) {
   // Trust what Razorpay says was actually captured (payment.amount), never
   // what the currently-deployed pricing.js says a tier costs right now — a
   // price edited between order-creation and this webhook firing must never
-  // change what gets recorded for an already-completed transaction. If the
-  // captured amount doesn't match any known price for this tier, something's
-  // wrong (stale price map, tampered notes) — money still moved, so record it
-  // rather than silently drop it, but flag it for a human to check rather
-  // than trusting the mismatch.
-  if (payment.amount !== tierInfo.amount) {
+  // change what gets recorded for an already-completed transaction. A
+  // coupon (api/_lib/coupons.js) can also legitimately make the captured
+  // amount less than tierInfo.amount — payment.notes.discount_amount
+  // records exactly how much, written authoritatively by
+  // api/create-order.js. If the captured amount doesn't match tier price
+  // minus that discount, something's wrong (stale price map, tampered
+  // notes) — money still moved, so record it rather than silently drop it,
+  // but flag it for a human to check rather than trusting the mismatch.
+  const discountAmount = Math.max(0, Number(payment.notes?.discount_amount) || 0);
+  if (payment.amount !== tierInfo.amount - discountAmount) {
     console.error('razorpay-webhook: captured amount does not match current tier price — recording amount as-captured for manual review', {
       payment_id: payment.id,
       tier,
       capturedAmount: payment.amount,
-      currentTierAmount: tierInfo.amount,
+      expectedAmount: tierInfo.amount - discountAmount,
     });
   }
 
@@ -140,6 +144,8 @@ export default async function handler(req, res) {
     currency: 'INR',
     razorpay_order_id: String(payment.order_id || '').slice(0, 100),
     razorpay_payment_id: String(payment.id || '').slice(0, 100),
+    coupon_code: payment.notes?.coupon_code || null,
+    discount_amount: discountAmount,
     status: 'paid',
   };
 

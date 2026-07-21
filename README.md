@@ -256,6 +256,23 @@ breakdown by program. If nothing happened in that window, it skips sending — n
 payments" noise every morning. Needs `SMTP_*` and Supabase configured (see **4.5**); `CRON_SECRET`
 is optional but recommended so the endpoint can't be triggered by anyone who finds the URL.
 
+The same daily run also emails a one-time "still want to enroll?" nudge to anyone whose checkout
+has sat unfinished (status `created`) for more than 2 hours — see **4.9** below — and cleans up
+stale rows in the `rate_limit_counters` table used by `api/_lib/rateLimit.js`.
+
+---
+
+## 4.9. Coupons
+
+From **Admin → Coupons**, create a code with a percent-off or flat-amount-off discount, optionally
+scoped to specific programs, with an optional usage limit and expiry date. At checkout, the coupon
+field is optional — if filled in, `api/create-order.js` validates and applies the discount entirely
+server-side (`api/_lib/coupons.js`) against the `coupons` table; the browser only ever sends the
+*code*, never a discount amount, matching the same never-trust-the-client rule the base tier price
+already follows. Applied coupons are recorded on the payment row for reconciliation. Deactivate a
+coupon any time from the same page — deactivated/expired/fully-redeemed codes are rejected at
+checkout with a clear error, not silently ignored.
+
 ---
 
 ## 5. Project structure
@@ -281,6 +298,8 @@ supabase/
   013_database_hygiene.sql  ← run this too — index/FK cleanup, certificate tamper-fix, email-change guard
   014_rate_limiting.sql     ← run this too — durable, cross-instance rate limiting (see api/_lib/rateLimit.js)
   015_payment_lifecycle.sql ← run this too — created/failed/refund payment states, refund tracking columns
+  016_abandoned_checkout.sql ← run this too — tracks whether an abandoned-checkout nudge was sent
+  017_coupons.sql            ← run this too — coupons table + discount tracking on payments
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)

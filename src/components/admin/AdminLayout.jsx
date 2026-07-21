@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LogOut, Inbox, Users, BarChart3, BookOpen, Award, Layers, Newspaper, CreditCard } from 'lucide-react';
+import { LogOut, Inbox, Users, BarChart3, BookOpen, Award, Layers, Newspaper, CreditCard, Tag } from 'lucide-react';
 import Logo from '../Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -11,6 +11,7 @@ const ADMIN_NAV = [
   { to: '/admin/course-content', label: 'Curriculum', icon: Layers },
   { to: '/admin/certificates', label: 'Certificates', icon: Award },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },
+  { to: '/admin/coupons', label: 'Coupons', icon: Tag },
   { to: '/admin/blog', label: 'Blog', icon: Newspaper },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ];

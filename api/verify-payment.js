@@ -97,11 +97,18 @@ export default async function handler(req, res) {
 
   const tier = order.notes?.tier;
   const tierInfo = TIER_PRICES[tier];
-  if (!tierInfo || order.amount !== tierInfo.amount) {
+  // A coupon (api/_lib/coupons.js) can legitimately reduce order.amount
+  // below tierInfo.amount — order.notes.discount_amount records exactly how
+  // much, written authoritatively by api/create-order.js at order-creation
+  // time, so the expected amount is tierInfo.amount minus that, not
+  // tierInfo.amount itself.
+  const discountAmount = Math.max(0, Number(order.notes?.discount_amount) || 0);
+  const expectedAmount = tierInfo ? tierInfo.amount - discountAmount : null;
+  if (!tierInfo || order.amount !== expectedAmount) {
     // Order exists and is signed genuinely, but its own recorded amount
-    // doesn't match what that tier should cost — treat as unverifiable
-    // rather than guess.
-    console.error('verify-payment: order tier/amount mismatch', { order_id: razorpay_order_id, tier, orderAmount: order.amount });
+    // doesn't match what that tier (net of any coupon) should cost — treat
+    // as unverifiable rather than guess.
+    console.error('verify-payment: order tier/amount mismatch', { order_id: razorpay_order_id, tier, orderAmount: order.amount, expectedAmount });
     return res.status(400).json({ ok: false, error: 'Could not verify payment details.' });
   }
 
@@ -110,11 +117,13 @@ export default async function handler(req, res) {
     email: String(order.notes?.email || '').trim().slice(0, 200),
     phone: String(order.notes?.phone || '').trim().slice(0, 30),
     tier,
-    amount: tierInfo.amount,
+    amount: order.amount,
     currency: 'INR',
     razorpay_order_id: String(razorpay_order_id).slice(0, 100),
     razorpay_payment_id: String(razorpay_payment_id).slice(0, 100),
     status: 'paid',
+    coupon_code: order.notes?.coupon_code || null,
+    discount_amount: discountAmount,
   };
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
