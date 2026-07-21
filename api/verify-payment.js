@@ -24,6 +24,7 @@ import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
 import { sendEmail, isEmailConfigured } from './_lib/email.js';
 import { TEAM_EMAIL, adminPaymentEmailHtml, studentPaymentEmailHtml } from './_lib/emailTemplates.js';
+import { recordPayment } from './_lib/payments.js';
 
 const MAX_BODY_BYTES = 5_000;
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 20 }; // 20 verify attempts / 10 min / IP
@@ -119,40 +120,19 @@ export default async function handler(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   const dbConfigured = Boolean(supabaseUrl && serviceKey);
-  let stored = false;
   // Whichever of verify-payment / the Razorpay webhook is the FIRST to
-  // successfully insert this razorpay_payment_id "wins" and owns sending the
-  // receipt emails — the loser's insert is silently ignored by the unique
-  // constraint (on_conflict=ignore-duplicates) and returns zero rows, so it
-  // knows to skip emailing and avoid sending the customer a duplicate
-  // receipt. Postgres's unique constraint makes this race-safe even if both
-  // requests land at the same instant.
+  // successfully claim or insert this payment "wins" and owns sending the
+  // receipt emails — see the comment in api/_lib/payments.js for how that's
+  // made race-safe even if both requests land at the same instant.
+  let stored = false;
   let isNewPayment = !dbConfigured; // no DB to dedupe against → always treat as new
 
   if (dbConfigured) {
-    try {
-      const dbRes = await fetch(`${supabaseUrl}/rest/v1/payments?on_conflict=razorpay_payment_id`, {
-        method: 'POST',
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-          'Content-Type': 'application/json',
-          Prefer: 'resolution=ignore-duplicates,return=representation',
-        },
-        body: JSON.stringify(clean),
-      });
-      stored = dbRes.ok;
-      if (dbRes.ok) {
-        const inserted = await dbRes.json().catch(() => []);
-        isNewPayment = Array.isArray(inserted) && inserted.length > 0;
-      } else {
-        const text = await dbRes.text().catch(() => '');
-        console.error('verify-payment: Supabase write failed', dbRes.status, text.slice(0, 500));
-      }
-    } catch (err) {
-      // The payment is still genuinely verified even if this write failed —
-      // don't fail the whole request over a DB hiccup after money moved.
-      console.error('verify-payment: Supabase write threw', err);
+    const result = await recordPayment(supabaseUrl, serviceKey, clean);
+    stored = result.stored;
+    isNewPayment = result.isNewPayment;
+    if (!stored) {
+      console.error('verify-payment: could not record payment', clean.razorpay_payment_id);
     }
   } else {
     console.error('verify-payment: Supabase not configured — a verified payment was not stored anywhere', clean.razorpay_payment_id);

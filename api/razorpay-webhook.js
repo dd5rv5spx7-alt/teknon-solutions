@@ -3,8 +3,10 @@
 // closes the tab before the client-side verify call fires (network drop,
 // browser crash, etc.), this webhook — configured directly in the Razorpay
 // dashboard, delivered straight from Razorpay's servers — still records the
-// payment. Idempotent on razorpay_payment_id, so if both paths fire for the
-// same payment, the second write is a safe no-op rather than a duplicate.
+// payment. Idempotent per event (see api/_lib/payments.js), so if both
+// paths fire for the same payment, the second write is a safe no-op rather
+// than a duplicate. Also the only path that ever hears about payment.failed
+// and refund.processed — verify-payment.js only ever runs after a success.
 //
 // Needs the RAW request body to verify the signature (JSON.stringify of a
 // parsed body is not guaranteed byte-identical to what Razorpay actually
@@ -21,6 +23,7 @@ import {
   adminPaymentEmailHtml,
   studentPaymentEmailHtml,
 } from './_lib/emailTemplates.js';
+import { recordPayment, recordFailedPayment, recordRefund } from './_lib/payments.js';
 
 export const config = {
   api: {
@@ -70,8 +73,32 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'Malformed payload' });
   }
 
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const dbConfigured = Boolean(supabaseUrl && serviceKey);
+
   if (event.event === 'payment.failed') {
-    await notifyPaymentFailed(event.payload?.payment?.entity);
+    const payment = event.payload?.payment?.entity;
+    if (dbConfigured) await recordFailedPayment(supabaseUrl, serviceKey, payment?.order_id);
+    await notifyPaymentFailed(payment);
+    return res.status(200).json({ ok: true });
+  }
+
+  if (event.event === 'refund.processed' || event.event === 'refund.created') {
+    // refund.created fires immediately (refund initiated); refund.processed
+    // fires once it's actually settled. Recording on both is harmless —
+    // recordRefund() is a plain update keyed on razorpay_payment_id, so a
+    // second delivery just overwrites with the same (or updated) amount.
+    const refund = event.payload?.refund?.entity;
+    const razorpayPaymentId = refund?.payment_id;
+    if (dbConfigured && razorpayPaymentId) {
+      await recordRefund(supabaseUrl, serviceKey, {
+        razorpayPaymentId,
+        refundId: refund.id,
+        refundedAmount: refund.amount,
+        totalAmount: await lookupPaymentAmount(supabaseUrl, serviceKey, razorpayPaymentId),
+      });
+    }
     return res.status(200).json({ ok: true });
   }
 
@@ -116,38 +143,13 @@ export default async function handler(req, res) {
     status: 'paid',
   };
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const dbConfigured = Boolean(supabaseUrl && serviceKey);
-  // See the matching comment in api/verify-payment.js: whichever of the two
-  // paths first inserts this razorpay_payment_id owns sending the receipt
-  // emails, so a customer who closes the tab right after paying (webhook is
-  // the only path that ever fires) still gets one, and a customer whose
-  // browser call *does* land doesn't get two.
   let isNewPayment = !dbConfigured;
 
   if (dbConfigured) {
-    try {
-      const dbRes = await fetch(`${supabaseUrl}/rest/v1/payments?on_conflict=razorpay_payment_id`, {
-        method: 'POST',
-        headers: {
-          apikey: serviceKey,
-          Authorization: `Bearer ${serviceKey}`,
-          'Content-Type': 'application/json',
-          Prefer: 'resolution=ignore-duplicates,return=representation',
-        },
-        body: JSON.stringify(clean),
-      });
-      if (dbRes.ok) {
-        const inserted = await dbRes.json().catch(() => []);
-        isNewPayment = Array.isArray(inserted) && inserted.length > 0;
-      } else {
-        const text = await dbRes.text().catch(() => '');
-        console.error('razorpay-webhook: Supabase write failed', dbRes.status, text.slice(0, 500));
-      }
-    } catch (err) {
-      // Best-effort — Razorpay retries webhook deliveries on failure anyway.
-      console.error('razorpay-webhook: Supabase write threw', err);
+    const result = await recordPayment(supabaseUrl, serviceKey, clean);
+    isNewPayment = result.isNewPayment;
+    if (!result.stored) {
+      console.error('razorpay-webhook: could not record payment', clean.razorpay_payment_id);
     }
   } else {
     console.error('razorpay-webhook: Supabase not configured — a captured payment was not stored anywhere', clean.razorpay_payment_id);
@@ -173,6 +175,20 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({ ok: true });
+}
+
+async function lookupPaymentAmount(supabaseUrl, serviceKey, razorpayPaymentId) {
+  try {
+    const res = await fetch(
+      `${supabaseUrl}/rest/v1/payments?razorpay_payment_id=eq.${encodeURIComponent(razorpayPaymentId)}&select=amount`,
+      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
+    );
+    if (!res.ok) return Infinity; // unknown → treat as partial refund rather than wrongly marking fully refunded
+    const rows = await res.json();
+    return rows[0]?.amount ?? Infinity;
+  } catch {
+    return Infinity;
+  }
 }
 
 // A customer whose card gets declined or who abandons the checkout mid-payment

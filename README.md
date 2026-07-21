@@ -203,12 +203,14 @@ The Pricing section now has real "Pay Now" buttons on the Starter/Professional/A
 5. Redeploy, then try a payment yourself — Razorpay's test-mode card number is
    `4111 1111 1111 1111` with any future expiry date and any CVV.
 6. Optional but recommended before taking real money: **Settings → Webhooks → Add New Webhook**,
-   URL `https://yoursite.com/api/razorpay-webhook`, subscribe to the `payment.captured` event, and
-   add the webhook secret it gives you as `RAZORPAY_WEBHOOK_SECRET` in Vercel too. This is a
-   reliability backstop — if someone pays but closes the tab before the browser can confirm it,
-   the webhook (delivered straight from Razorpay's servers, not the customer's browser) still
-   records the payment. Checkout works without it, just slightly less robust against that one
-   edge case.
+   URL `https://yoursite.com/api/razorpay-webhook`, subscribe to `payment.captured`,
+   `payment.failed`, and `refund.processed`, and add the webhook secret it gives you as
+   `RAZORPAY_WEBHOOK_SECRET` in Vercel too. This is a reliability backstop — if someone pays but
+   closes the tab before the browser can confirm it, the webhook (delivered straight from
+   Razorpay's servers, not the customer's browser) still records the payment; the other two events
+   keep failed payments and refunds (including ones issued straight from the Razorpay dashboard)
+   in sync with the `payments` table too. Checkout works without any of this configured, just
+   slightly less robust against those edge cases.
 7. When you're ready for real payments: **Settings → API Keys → Generate Live Key**, and swap the
    two Vercel env vars for the live values. Razorpay requires KYC/business verification before
    activating live mode — that's their process, not something to configure here.
@@ -223,15 +225,26 @@ straight to that endpoint without a valid signature is rejected.
 (a receipt) and the team (`info@ateknonsolutions.com`) get an email. Two independent paths can
 each trigger this — the browser calling `/api/verify-payment` right after checkout, and the
 Razorpay webhook (`/api/razorpay-webhook`) as a backstop if the browser never got the chance to
-call home (closed tab, dropped connection). Both paths write the same payment row to the
-`payments` table with a unique constraint on the Razorpay payment ID, and only whichever one
-*actually inserts a new row* sends the emails — so a customer who closes the tab right after
-paying still gets a receipt (via the webhook), and a customer whose browser call *does* land never
-gets two.
+call home (closed tab, dropped connection). `/api/create-order` writes a `created` row the moment
+checkout starts (before any payment happens); both paths then race to claim and flip that same row
+to `paid` (see `api/_lib/payments.js`), and only whichever one *wins the claim* sends the receipt
+emails — so a customer who closes the tab right after paying still gets a receipt (via the
+webhook), and a customer whose browser call *does* land never gets two.
 
-A failed or abandoned payment (declined card, closed checkout mid-payment) also fires a quiet
-admin-only alert — the customer never reaches a "success" screen so there's nothing to email them,
-but the team gets a lead they can personally follow up with instead of a lost sale nobody notices.
+A failed or abandoned payment (declined card, closed checkout mid-payment) flips that same `created`
+row to `failed` and fires a quiet admin-only alert — the customer never reaches a "success" screen
+so there's nothing to email them, but the team gets a lead they can personally follow up with
+instead of a lost sale nobody notices. A payment that's simply started and never finished (browser
+closed before Razorpay's widget even opened) stays `created` — visible and filterable in
+**Admin → Payments** rather than invisible.
+
+**Refunds** — from **Admin → Payments**, click **Refund** on any paid payment to issue a full or
+partial refund. This calls Razorpay's Refunds API directly (never faked locally), updates the
+payment's status to `refunded`/`partially_refunded`, and excludes the refunded amount from the
+revenue stats on that page. Each row also has a **View in Razorpay** link for manual reconciliation
+against Razorpay's own dashboard. Subscribe your webhook (section above) to `refund.processed` too,
+not just `payment.captured`, so a refund issued directly from the Razorpay dashboard (bypassing
+this admin UI) still gets reflected here automatically.
 
 ---
 
@@ -267,6 +280,7 @@ supabase/
   012_payments.sql          ← run this too if you set up Supabase before Razorpay payments
   013_database_hygiene.sql  ← run this too — index/FK cleanup, certificate tamper-fix, email-change guard
   014_rate_limiting.sql     ← run this too — durable, cross-instance rate limiting (see api/_lib/rateLimit.js)
+  015_payment_lifecycle.sql ← run this too — created/failed/refund payment states, refund tracking columns
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)

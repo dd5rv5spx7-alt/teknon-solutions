@@ -79,6 +79,40 @@ export default async function handler(req, res) {
     return res.status(502).json({ ok: false, error: 'Could not create payment order. Please try again.' });
   }
 
+  // Best-effort: record the order immediately as 'created', before any
+  // payment has happened. Without this, a customer who fills the checkout
+  // form and never completes Razorpay's widget leaves zero trace anywhere —
+  // no lead, no admin visibility. A failure here doesn't block checkout;
+  // api/verify-payment.js and api/razorpay-webhook.js both fall back to
+  // inserting a fresh row directly if no 'created' row exists to claim.
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (supabaseUrl && serviceKey) {
+    try {
+      await fetch(`${supabaseUrl}/rest/v1/payments`, {
+        method: 'POST',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({
+          name: String(name).trim().slice(0, 200),
+          email: String(email).trim().slice(0, 200),
+          phone: String(phone).trim().slice(0, 30),
+          tier,
+          amount: tierInfo.amount,
+          currency: 'INR',
+          razorpay_order_id: order.id,
+          status: 'created',
+        }),
+      });
+    } catch (err) {
+      console.error('create-order: could not record created-order row', err);
+    }
+  }
+
   return res.status(200).json({
     ok: true,
     order_id: order.id,
