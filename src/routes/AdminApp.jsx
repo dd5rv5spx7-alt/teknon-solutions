@@ -23,6 +23,7 @@ const AdminCourseContent = lazy(() => import('../pages/AdminCourseContent.jsx'))
 const AdminCertificates = lazy(() => import('../pages/AdminCertificates.jsx'));
 const AdminPayments = lazy(() => import('../pages/AdminPayments.jsx'));
 const AdminCoupons = lazy(() => import('../pages/AdminCoupons.jsx'));
+const AdminBatches = lazy(() => import('../pages/AdminBatches.jsx'));
 const AdminBlog = lazy(() => import('../pages/AdminBlog.jsx'));
 
 function RouteFallback() {
@@ -55,6 +56,7 @@ export default function AdminApp() {
             <Route path="certificates" element={<AdminCertificates />} />
             <Route path="payments" element={<AdminPayments />} />
             <Route path="coupons" element={<AdminCoupons />} />
+            <Route path="batches" element={<AdminBatches />} />
             <Route path="blog" element={<AdminBlog />} />
             <Route path="analytics" element={<AdminAnalytics />} />
           </Route>
