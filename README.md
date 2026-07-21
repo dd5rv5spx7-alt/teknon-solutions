@@ -100,14 +100,27 @@ The contact form and `/admin` login are real, working code now — but they need
 you before they actually do anything, because I can't create accounts or connect to services on
 your behalf. Two independent services, ~10 minutes total:
 
-**A. Email (Resend) — makes the contact form send real email**
-1. Sign up free at [resend.com](https://resend.com) → **API Keys** → **Create API Key**.
-2. In Vercel: **Project → Settings → Environment Variables** → add `RESEND_API_KEY` with that value.
-3. Redeploy (Vercel → Deployments → ⋯ → Redeploy). Test by submitting the contact form, or by
-   visiting `yoursite.com/api/health` — it'll show `"resend_configured": true` once it's live.
-4. By default it sends from `onboarding@resend.dev` (works immediately, no setup). Once you want
-   email arriving from `@ateknonsolutions.com`, add and verify that domain in Resend's dashboard,
-   then change the `from` address in `api/enquiry.js`.
+**A. Email (Titan Mail SMTP) — makes the contact form, payment receipts, and the daily digest send real email**
+
+Sends straight through your existing Titan Mail mailbox (e.g. `info@ateknonsolutions.com`) —
+no separate email-service account, no sender-domain verification dance. Every email the site
+sends shows up in that mailbox's own Sent folder, and replies land straight in the inbox you
+already check.
+
+1. Open your Titan Mail webmail (usually reachable from your domain host's email dashboard) and
+   confirm the outgoing (SMTP) server under Settings — it's typically `smtp.titan.email` on port
+   `465`. Only deviate from those if your provider's settings page shows something different.
+2. In Vercel: **Project → Settings → Environment Variables** → add:
+   - `SMTP_HOST` — `smtp.titan.email` (or whatever your provider showed)
+   - `SMTP_PORT` — `465`
+   - `SMTP_USER` — the full mailbox address, e.g. `info@ateknonsolutions.com`
+   - `SMTP_PASSWORD` — that mailbox's password (as sensitive as any other secret in this
+     project — never commit it, never expose it to the browser)
+   - `SMTP_FROM_NAME` — the display name on outgoing mail, e.g. `A Teknon Solutions`
+3. Redeploy (Vercel → Deployments → ⋯ → Redeploy). Test by submitting the contact form.
+4. Optional: add `CRON_SECRET` (any long random string, e.g. from `openssl rand -hex 32`) — Vercel
+   automatically attaches it as an `Authorization` header on every scheduled call to the daily
+   digest (see **4.8** below), so the endpoint can't be triggered by anyone who finds the URL.
 
 **B. Auth + database (Supabase) — makes `/admin/login` work and stores enquiries**
 1. Sign up free at [supabase.com](https://supabase.com/dashboard) → **New Project**.
@@ -193,20 +206,52 @@ into charging less than the real price. Payment success is verified via Razorpay
 signature (`api/verify-payment.js`) before anything is recorded — a fabricated "success" POSTed
 straight to that endpoint without a valid signature is rejected.
 
+**Who gets emailed on a payment, and when:** the moment a payment is verified, both the customer
+(a receipt) and the team (`info@ateknonsolutions.com`) get an email. Two independent paths can
+each trigger this — the browser calling `/api/verify-payment` right after checkout, and the
+Razorpay webhook (`/api/razorpay-webhook`) as a backstop if the browser never got the chance to
+call home (closed tab, dropped connection). Both paths write the same payment row to the
+`payments` table with a unique constraint on the Razorpay payment ID, and only whichever one
+*actually inserts a new row* sends the emails — so a customer who closes the tab right after
+paying still gets a receipt (via the webhook), and a customer whose browser call *does* land never
+gets two.
+
+A failed or abandoned payment (declined card, closed checkout mid-payment) also fires a quiet
+admin-only alert — the customer never reaches a "success" screen so there's nothing to email them,
+but the team gets a lead they can personally follow up with instead of a lost sale nobody notices.
+
+---
+
+## 4.8. Daily digest email
+
+`/api/cron/daily-digest`, scheduled once a day (9:00am IST) via Vercel Cron in `vercel.json`,
+emails the team one summary of the last 24 hours: new enquiries, payments received, revenue, and a
+breakdown by program. If nothing happened in that window, it skips sending — no "0 enquiries, 0
+payments" noise every morning. Needs `SMTP_*` and Supabase configured (see **4.5**); `CRON_SECRET`
+is optional but recommended so the endpoint can't be triggered by anyone who finds the URL.
+
 ---
 
 ## 5. Project structure
 
 ```
 api/
-  enquiry.js               ← POST endpoint: validates, stores to Supabase, emails via Resend
+  enquiry.js               ← POST endpoint: validates, stores to Supabase, emails via Titan Mail SMTP
+  create-order.js          ← POST endpoint: creates a Razorpay order for a fixed course tier
+  verify-payment.js        ← POST endpoint: verifies a Razorpay payment, stores it, emails a receipt
+  razorpay-webhook.js      ← POST endpoint: reliability backstop for verify-payment + payment-failed alert
   health.js                ← GET /api/health — confirms what's configured, without leaking secrets
   admin/create-person.js   ← POST endpoint: admin-only, invites a new student/faculty account
+  cron/daily-digest.js     ← GET endpoint, called by Vercel Cron: daily enquiries+payments summary email
+  _lib/email.js            ← Titan Mail SMTP sender (nodemailer) shared by every endpoint above
+  _lib/emailTemplates.js   ← shared HTML email fragments (brand header/footer, row builder)
+  _lib/pricing.js          ← authoritative tier→price map, resolved server-side only
 supabase/
   schema.sql                ← run once in Supabase's SQL editor: profiles + enquiries tables, RLS
   002_enrich_enquiries.sql  ← run this too if you set up Supabase before this update
   003_people_admin.sql      ← run this too if you set up Supabase before the People admin module
   004_student_self_service.sql ← run this too if you set up Supabase before the student portal
+  012_payments.sql          ← run this too if you set up Supabase before Razorpay payments
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)

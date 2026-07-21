@@ -5,6 +5,12 @@
       "destination": "/index.html"
     }
   ],
+  "crons": [
+    {
+      "path": "/api/cron/daily-digest",
+      "schedule": "30 3 * * *"
+    }
+  ],
   "headers": [
     {
       "source": "/(.*)",

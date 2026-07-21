@@ -21,7 +21,8 @@
 import crypto from 'node:crypto';
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
 import { TIER_PRICES } from './_lib/pricing.js';
-import { sendEmail, escapeHtml } from './_lib/email.js';
+import { sendEmail, isEmailConfigured, escapeHtml } from './_lib/email.js';
+import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL, rupees } from './_lib/emailTemplates.js';
 
 const TEAM_EMAIL = 'info@ateknonsolutions.com';
 const MAX_BODY_BYTES = 5_000;
@@ -117,25 +118,34 @@ export default async function handler(req, res) {
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const dbConfigured = Boolean(supabaseUrl && serviceKey);
   let stored = false;
+  // Whichever of verify-payment / the Razorpay webhook is the FIRST to
+  // successfully insert this razorpay_payment_id "wins" and owns sending the
+  // receipt emails — the loser's insert is silently ignored by the unique
+  // constraint (on_conflict=ignore-duplicates) and returns zero rows, so it
+  // knows to skip emailing and avoid sending the customer a duplicate
+  // receipt. Postgres's unique constraint makes this race-safe even if both
+  // requests land at the same instant.
+  let isNewPayment = !dbConfigured; // no DB to dedupe against → always treat as new
 
-  if (supabaseUrl && serviceKey) {
+  if (dbConfigured) {
     try {
-      // Idempotent on razorpay_payment_id: if the webhook (or a retried
-      // client call) already recorded this exact payment, this is a no-op
-      // rather than a duplicate row or an error.
       const dbRes = await fetch(`${supabaseUrl}/rest/v1/payments?on_conflict=razorpay_payment_id`, {
         method: 'POST',
         headers: {
           apikey: serviceKey,
           Authorization: `Bearer ${serviceKey}`,
           'Content-Type': 'application/json',
-          Prefer: 'resolution=ignore-duplicates,return=minimal',
+          Prefer: 'resolution=ignore-duplicates,return=representation',
         },
         body: JSON.stringify(clean),
       });
       stored = dbRes.ok;
-      if (!dbRes.ok) {
+      if (dbRes.ok) {
+        const inserted = await dbRes.json().catch(() => []);
+        isNewPayment = Array.isArray(inserted) && inserted.length > 0;
+      } else {
         const text = await dbRes.text().catch(() => '');
         console.error('verify-payment: Supabase write failed', dbRes.status, text.slice(0, 500));
       }
@@ -148,16 +158,15 @@ export default async function handler(req, res) {
     console.error('verify-payment: Supabase not configured — a verified payment was not stored anywhere', clean.razorpay_payment_id);
   }
 
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
+  if (isEmailConfigured() && isNewPayment) {
     const subjectSafeName = clean.name.replace(/[\r\n]+/g, ' ');
     try {
-      await sendEmail(resendKey, {
+      await sendEmail({
         to: TEAM_EMAIL,
         subject: `💳 Payment received — ${subjectSafeName} (${tierInfo.label})`,
         html: adminPaymentEmailHtml(clean, tierInfo),
       });
-      await sendEmail(resendKey, {
+      await sendEmail({
         to: clean.email,
         bcc: TEAM_EMAIL,
         subject: 'Payment confirmed — A Teknon Solutions',
@@ -167,8 +176,8 @@ export default async function handler(req, res) {
       // Same reasoning — a failed receipt email doesn't undo a verified payment.
       console.error('verify-payment: email send failed', err);
     }
-  } else {
-    console.error('verify-payment: Resend not configured — no receipt was sent for', clean.razorpay_payment_id);
+  } else if (!isEmailConfigured()) {
+    console.error('verify-payment: email not configured — no receipt was sent for', clean.razorpay_payment_id);
   }
 
   return res.status(200).json({ ok: true, stored });
@@ -182,48 +191,28 @@ function safeParse(str) {
   }
 }
 
-function rupees(paise) {
-  return `₹${(paise / 100).toLocaleString('en-IN')}`;
-}
-
 function adminPaymentEmailHtml(p, tierInfo) {
-  const row = (label, value) => `
-    <tr>
-      <td style="padding:8px 14px;color:#5B6B8C;font-size:13px;font-family:sans-serif;white-space:nowrap;">${label}</td>
-      <td style="padding:8px 14px;color:#0B1F4D;font-size:13px;font-family:sans-serif;">${escapeHtml(value || '—')}</td>
-    </tr>`;
-  return `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;">
-      <div style="background:linear-gradient(135deg,#0B1F4D,#071633);padding:24px 28px;border-radius:16px 16px 0 0;">
-        <p style="color:#fff;font-size:18px;font-weight:700;margin:0;">💳 Payment Received</p>
-        <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:4px 0 0;">A Teknon Solutions</p>
-      </div>
-      <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #eef1f6;border-top:none;border-radius:0 0 16px 16px;overflow:hidden;">
-        ${row('Name', p.name)}
-        ${row('Email', p.email)}
-        ${row('Phone', p.phone)}
-        ${row('Program', tierInfo.label)}
-        ${row('Amount', rupees(p.amount))}
-        ${row('Razorpay Payment ID', p.razorpay_payment_id)}
-        ${row('Razorpay Order ID', p.razorpay_order_id)}
-      </table>
-      <p style="text-align:center;margin-top:16px;">
-        <a href="https://ateknonsolutions.com/admin" style="display:inline-block;background:#1E5EFF;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px 20px;border-radius:100px;">
-          Open in admin dashboard
-        </a>
-      </p>
-    </div>`;
+  return internalEmailHtml({
+    emoji: '💳',
+    title: 'Payment Received',
+    ctaHref: ADMIN_URL,
+    rows: [
+      emailRow('Name', p.name),
+      emailRow('Email', p.email),
+      emailRow('Phone', p.phone),
+      emailRow('Program', tierInfo.label),
+      emailRow('Amount', rupees(p.amount)),
+      emailRow('Razorpay Payment ID', p.razorpay_payment_id),
+      emailRow('Razorpay Order ID', p.razorpay_order_id),
+    ],
+  });
 }
 
 function studentPaymentEmailHtml(p, tierInfo) {
-  return `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-      <div style="background:linear-gradient(135deg,#0B1F4D,#071633);padding:28px;border-radius:16px 16px 0 0;text-align:center;">
-        <p style="color:#fff;font-size:20px;font-weight:800;margin:0;letter-spacing:-0.02em;">A TEKNON SOLUTIONS</p>
-        <p style="color:#7DB8FF;font-size:11px;letter-spacing:0.3em;margin:4px 0 0;">LEARN. BUILD. GROW.</p>
-      </div>
-      <div style="background:#fff;border:1px solid #eef1f6;border-top:none;border-radius:0 0 16px 16px;padding:28px;">
-        <p style="color:#0B1F4D;font-size:15px;">Hello ${escapeHtml(p.name)},</p>
+  return customerEmailHtml({
+    greetingName: p.name,
+    whatsappHref: WHATSAPP_HREF,
+    bodyHtml: `
         <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
           Your payment of <b style="color:#0B1F4D;">${rupees(p.amount)}</b> for the
           <b style="color:#0B1F4D;">${escapeHtml(tierInfo.label)}</b> program is confirmed. Our team
@@ -231,16 +220,6 @@ function studentPaymentEmailHtml(p, tierInfo) {
         </p>
         <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
           Keep this email as your receipt — payment ID <code style="color:#0B1F4D;">${escapeHtml(p.razorpay_payment_id)}</code>.
-        </p>
-        <p style="text-align:center;margin:22px 0;">
-          <a href="https://wa.me/918897571616" style="display:inline-block;background:#1E5EFF;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:11px 24px;border-radius:100px;">
-            Message us on WhatsApp
-          </a>
-        </p>
-        <p style="color:#0B1F4D;font-size:14px;margin-top:24px;">Regards,<br/>Team A Teknon Solutions</p>
-      </div>
-      <p style="text-align:center;color:#9AA7C2;font-size:11px;margin-top:14px;">
-        A Teknon Solutions · Rajahmundry, Andhra Pradesh · ateknonsolutions.com
-      </p>
-    </div>`;
+        </p>`,
+  });
 }

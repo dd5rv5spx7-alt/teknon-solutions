@@ -1,12 +1,13 @@
 // POST /api/enquiry
 // Validates a contact-form submission, checks for a very recent duplicate,
 // stores it in Supabase (if configured), and sends a notification + auto-reply
-// via Resend (if configured). Degrades gracefully: if only one of Supabase/
-// Resend is set up, that half still works and the response says exactly what
-// happened rather than silently failing.
+// via Titan Mail SMTP (if configured). Degrades gracefully: if only one of
+// Supabase/SMTP is set up, that half still works and the response says
+// exactly what happened rather than silently failing.
 
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
-import { sendEmail, escapeHtml } from './_lib/email.js';
+import { sendEmail, isEmailConfigured, escapeHtml } from './_lib/email.js';
+import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL } from './_lib/emailTemplates.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const TEAM_EMAIL = 'info@ateknonsolutions.com';
@@ -105,12 +106,11 @@ export default async function handler(req, res) {
     result.warnings.push('Supabase not configured — enquiry was not stored, only emailed.');
   }
 
-  // ── Email via Resend ──
-  const resendKey = process.env.RESEND_API_KEY;
-  if (resendKey) {
+  // ── Email via Titan Mail SMTP ──
+  if (isEmailConfigured()) {
     const now = new Date();
     try {
-      await sendEmail(resendKey, {
+      await sendEmail({
         to: TEAM_EMAIL,
         // Subject lines aren't run through escapeHtml (there's no HTML to
         // escape), but embedded CR/LF could otherwise inject extra headers
@@ -118,7 +118,7 @@ export default async function handler(req, res) {
         subject: `🚀 New Enquiry Received — ${clean.name.replace(/[\r\n]+/g, ' ')}`,
         html: adminEmailHtml({ ...clean, submittedAt: now }),
       });
-      await sendEmail(resendKey, {
+      await sendEmail({
         to: clean.email,
         bcc: TEAM_EMAIL, // a copy of every email the system sends lands at info@ too
         subject: 'Thank you for contacting A Teknon Solutions',
@@ -126,16 +126,17 @@ export default async function handler(req, res) {
       });
       result.emailed = true;
     } catch (err) {
+      console.error('enquiry: email send failed', err);
       result.warnings.push('Could not send confirmation email.');
     }
   } else {
-    result.warnings.push('Resend not configured — no email was sent.');
+    result.warnings.push('Email is not configured — no email was sent.');
   }
 
   if (!result.stored && !result.emailed) {
     return res.status(500).json({
       ok: false,
-      error: 'Neither Supabase nor Resend is configured yet — nothing was saved. See .env.example.',
+      error: 'Neither Supabase nor email is configured yet — nothing was saved. See .env.example.',
     });
   }
 
@@ -143,47 +144,31 @@ export default async function handler(req, res) {
 }
 
 function adminEmailHtml(e) {
-  const row = (label, value) => `
-    <tr>
-      <td style="padding:8px 14px;color:#5B6B8C;font-size:13px;font-family:sans-serif;white-space:nowrap;">${label}</td>
-      <td style="padding:8px 14px;color:#0B1F4D;font-size:13px;font-family:sans-serif;">${escapeHtml(value || '—')}</td>
-    </tr>`;
-  return `
-    <div style="font-family:sans-serif;max-width:520px;margin:0 auto;">
-      <div style="background:linear-gradient(135deg,#0B1F4D,#071633);padding:24px 28px;border-radius:16px 16px 0 0;">
-        <p style="color:#fff;font-size:18px;font-weight:700;margin:0;">🚀 New Enquiry Received</p>
-        <p style="color:rgba(255,255,255,0.6);font-size:12px;margin:4px 0 0;">A Teknon Solutions</p>
-      </div>
-      <table style="width:100%;border-collapse:collapse;background:#fff;border:1px solid #eef1f6;border-top:none;border-radius:0 0 16px 16px;overflow:hidden;">
-        ${row('Name', e.name)}
-        ${row('Email', e.email)}
-        ${row('Phone', e.phone)}
-        ${row('College', e.college)}
-        ${row('Year', e.year)}
-        ${row('Program', e.program)}
-        ${row('Message', e.message)}
-        ${row('Date', e.submittedAt.toLocaleDateString('en-IN'))}
-        ${row('Time', e.submittedAt.toLocaleTimeString('en-IN'))}
-        ${row('IP', e.ip_address)}
-        ${row('User agent', e.user_agent)}
-      </table>
-      <p style="text-align:center;margin-top:16px;">
-        <a href="https://ateknonsolutions.com/admin" style="display:inline-block;background:#1E5EFF;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:10px 20px;border-radius:100px;">
-          Open in admin dashboard
-        </a>
-      </p>
-    </div>`;
+  return internalEmailHtml({
+    emoji: '🚀',
+    title: 'New Enquiry Received',
+    ctaHref: ADMIN_URL,
+    rows: [
+      emailRow('Name', e.name),
+      emailRow('Email', e.email),
+      emailRow('Phone', e.phone),
+      emailRow('College', e.college),
+      emailRow('Year', e.year),
+      emailRow('Program', e.program),
+      emailRow('Message', e.message),
+      emailRow('Date', e.submittedAt.toLocaleDateString('en-IN')),
+      emailRow('Time', e.submittedAt.toLocaleTimeString('en-IN')),
+      emailRow('IP', e.ip_address),
+      emailRow('User agent', e.user_agent),
+    ],
+  });
 }
 
 function studentEmailHtml(e) {
-  return `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-      <div style="background:linear-gradient(135deg,#0B1F4D,#071633);padding:28px;border-radius:16px 16px 0 0;text-align:center;">
-        <p style="color:#fff;font-size:20px;font-weight:800;margin:0;letter-spacing:-0.02em;">A TEKNON SOLUTIONS</p>
-        <p style="color:#7DB8FF;font-size:11px;letter-spacing:0.3em;margin:4px 0 0;">LEARN. BUILD. GROW.</p>
-      </div>
-      <div style="background:#fff;border:1px solid #eef1f6;border-top:none;border-radius:0 0 16px 16px;padding:28px;">
-        <p style="color:#0B1F4D;font-size:15px;">Hello ${escapeHtml(e.name)},</p>
+  return customerEmailHtml({
+    greetingName: e.name,
+    whatsappHref: WHATSAPP_HREF,
+    bodyHtml: `
         <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
           Thank you for contacting A Teknon Solutions. We've received your enquiry
           ${e.program ? `about the <b style="color:#0B1F4D;">${escapeHtml(e.program)}</b> program` : ''}
@@ -192,18 +177,8 @@ function studentEmailHtml(e) {
         <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
           Meanwhile, feel free to reply to this email if you have any questions, or reach us
           directly on WhatsApp for a faster response.
-        </p>
-        <p style="text-align:center;margin:22px 0;">
-          <a href="https://wa.me/918897571616" style="display:inline-block;background:#1E5EFF;color:#fff;text-decoration:none;font-size:13px;font-weight:600;padding:11px 24px;border-radius:100px;">
-            Message us on WhatsApp
-          </a>
-        </p>
-        <p style="color:#0B1F4D;font-size:14px;margin-top:24px;">Regards,<br/>Team A Teknon Solutions</p>
-      </div>
-      <p style="text-align:center;color:#9AA7C2;font-size:11px;margin-top:14px;">
-        A Teknon Solutions · Rajahmundry, Andhra Pradesh · ateknonsolutions.com
-      </p>
-    </div>`;
+        </p>`,
+  });
 }
 
 function safeParse(str) {
