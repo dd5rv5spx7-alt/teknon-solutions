@@ -303,6 +303,20 @@ Four modules named in CLAUDE.md's original spec, all real now:
 
 ---
 
+## 4.11. GST invoicing
+
+At checkout, "Need a GST invoice?" reveals optional GSTIN + billing name/address fields — most
+consumers skip this. Server-side (`api/_lib/gst.js`), a valid GSTIN's state code decides CGST+SGST
+(same state as the business, Andhra Pradesh) vs. IGST (any other state); the rate and HSN/SAC code
+are named constants specifically so they're easy to correct in one place if they're wrong — **they
+are a reasonable default, not a substitute for your own accountant confirming them.** Every payment
+that reaches `paid` gets a sequential invoice number (`INV-2026-00001`, …) assigned by a database
+trigger, and both the student (their own payments, via **Student Dashboard → Your payments**) and
+staff (**Admin → Payments → Invoice**) can view and print/save-as-PDF the invoice — no PDF library
+needed, it reuses the same browser-print pattern certificates already use.
+
+---
+
 ## 5. Project structure
 
 ```
@@ -332,6 +346,7 @@ supabase/
   019_attendance.sql         ← run this too — attendance sessions + records (admin/faculty write)
   020_assignments.sql        ← run this too — assignments + submissions, staff-only grading guard
   021_cms.sql                ← run this too — site_content table (FAQ & Testimonials, admin-editable)
+  022_gst_invoicing.sql      ← run this too — GSTIN/billing columns, sequential invoice numbers, student invoice access
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)

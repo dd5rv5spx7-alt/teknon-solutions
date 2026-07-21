@@ -133,17 +133,18 @@
     scrollbar-width: none;
   }
 
-  /* Isolates a single certificate for printing — everything else on the
-     page is hidden so "Print" doesn't dump the whole dashboard chrome. */
+  /* Isolates a single certificate or invoice for printing — everything else
+     on the page is hidden so "Print" doesn't dump the whole dashboard
+     chrome. Shared by both CertificateModal and InvoiceModal. */
   @media print {
     body * {
       visibility: hidden;
     }
-    .certificate-print-area,
-    .certificate-print-area * {
+    .print-area,
+    .print-area * {
       visibility: visible;
     }
-    .certificate-print-area {
+    .print-area {
       position: fixed;
       inset: 0;
     }

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X, CalendarCheck, FileCheck2, Send } from 'lucide-react';
+import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X, CalendarCheck, FileCheck2, Send, Receipt } from 'lucide-react';
+import InvoiceModal from '../components/InvoiceModal.jsx';
 import Logo from '../components/Logo.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
@@ -25,6 +26,10 @@ export default function StudentDashboard() {
 
   const [attendance, setAttendance] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(true);
+
+  const [payments, setPayments] = useState([]);
+  const [loadingPayments, setLoadingPayments] = useState(true);
+  const [viewingInvoice, setViewingInvoice] = useState(null);
 
   const [assignments, setAssignments] = useState([]);
   const [submissions, setSubmissions] = useState({}); // assignment_id -> submission row
@@ -74,6 +79,20 @@ export default function StudentDashboard() {
       .then(({ data }) => {
         setCertificates(data ?? []);
         setLoadingCertificates(false);
+      });
+
+    // "payments: student reads own by email" (022_gst_invoicing.sql) matches
+    // on the logged-in user's own email — checkout has always been guest
+    // style with no student_id link, so this is how a student sees payments
+    // made under their account's email, even ones made before they logged in.
+    supabase
+      .from('payments')
+      .select('*')
+      .in('status', ['paid', 'refunded', 'partially_refunded'])
+      .order('created_at', { ascending: false })
+      .then(({ data }) => {
+        setPayments(data ?? []);
+        setLoadingPayments(false);
       });
 
     supabase
@@ -265,6 +284,39 @@ export default function StudentDashboard() {
                   >
                     Continue Learning
                   </Link>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Payments */}
+        <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 mb-6">
+          <h2 className="text-sm font-semibold text-navy dark:text-white mb-4 flex items-center gap-2">
+            <Receipt size={15} /> Your payments
+          </h2>
+          {loadingPayments ? (
+            <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+              <Loader2 size={15} className="animate-spin" /> Loading…
+            </div>
+          ) : payments.length === 0 ? (
+            <p className="text-sm text-slatesoft dark:text-white/50">No payments yet.</p>
+          ) : (
+            <div className="space-y-3">
+              {payments.map((p) => (
+                <div key={p.id} className="flex items-center justify-between gap-3 border-b border-navy/5 dark:border-white/5 pb-3 last:border-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-navy dark:text-white">
+                      ₹{((p.amount - (p.refunded_amount || 0)) / 100).toLocaleString('en-IN')}
+                    </p>
+                    <p className="text-xs text-slatesoft dark:text-white/40">{new Date(p.created_at).toLocaleDateString()}</p>
+                  </div>
+                  <button
+                    onClick={() => setViewingInvoice(p)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-grad-primary text-white hover:brightness-110 transition-all shrink-0"
+                  >
+                    View Invoice
+                  </button>
                 </div>
               ))}
             </div>
@@ -474,6 +526,8 @@ export default function StudentDashboard() {
           onClose={() => setViewingCert(null)}
         />
       )}
+
+      {viewingInvoice && <InvoiceModal payment={viewingInvoice} onClose={() => setViewingInvoice(null)} />}
     </div>
   );
 }
@@ -563,7 +617,7 @@ function CertificateModal({ certificate, studentName, onClose }) {
           </button>
         </div>
 
-        <div className="certificate-print-area rounded-2xl border-2 border-royal/20 dark:border-accent/30 bg-grad-navy p-8 text-center">
+        <div className="print-area rounded-2xl border-2 border-royal/20 dark:border-accent/30 bg-grad-navy p-8 text-center">
           <p className="font-mono text-[11px] tracking-[0.3em] text-white/50 mb-6">A TEKNON SOLUTIONS</p>
           <p className="text-xs uppercase tracking-wide text-white/50 mb-2">Certificate of Completion</p>
           <p className="font-display font-extrabold text-2xl text-white mb-4">{studentName}</p>

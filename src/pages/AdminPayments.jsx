@@ -1,9 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { CreditCard, Loader2, Search, Download, IndianRupee, TrendingUp, Receipt, ExternalLink, Undo2, X } from 'lucide-react';
+import { CreditCard, Loader2, Search, Download, IndianRupee, TrendingUp, Receipt, ExternalLink, Undo2, X, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import StatCard from '../components/admin/StatCard.jsx';
 import { downloadCsv } from '../lib/csv.js';
+import InvoiceModal from '../components/InvoiceModal.jsx';
 
 const TIER_LABELS = {
   starter: 'Starter (2-week)',
@@ -35,6 +36,7 @@ export default function AdminPayments() {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [refunding, setRefunding] = useState(null); // payment row being refunded, or null
+  const [viewingInvoice, setViewingInvoice] = useState(null);
 
   useEffect(() => {
     fetchPage(0);
@@ -208,6 +210,15 @@ export default function AdminPayments() {
                   {new Date(p.created_at).toLocaleDateString()}
                 </span>
                 <div className="flex items-center gap-2 shrink-0 ml-auto sm:ml-0">
+                  {(p.status === 'paid' || p.status === 'refunded' || p.status === 'partially_refunded') && (
+                    <button
+                      onClick={() => setViewingInvoice(p)}
+                      title="View invoice"
+                      className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border border-navy/10 dark:border-white/15 text-navy dark:text-white hover:border-royal/40 transition-colors"
+                    >
+                      <FileText size={12} /> Invoice
+                    </button>
+                  )}
                   {p.razorpay_payment_id && (
                     <a
                       href={`https://dashboard.razorpay.com/app/payments/${encodeURIComponent(p.razorpay_payment_id)}`}
@@ -256,6 +267,8 @@ export default function AdminPayments() {
           onRefunded={onRefunded}
         />
       )}
+
+      {viewingInvoice && <InvoiceModal payment={viewingInvoice} onClose={() => setViewingInvoice(null)} />}
     </>
   );
 }

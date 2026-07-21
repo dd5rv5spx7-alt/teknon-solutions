@@ -31,6 +31,10 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [couponCode, setCouponCode] = useState('');
+  const [wantsGstInvoice, setWantsGstInvoice] = useState(false);
+  const [gstin, setGstin] = useState('');
+  const [billingName, setBillingName] = useState('');
+  const [billingAddress, setBillingAddress] = useState('');
   const [error, setError] = useState('');
   const [visible, setVisible] = useState(false); // drives the fade/scale transition
 
@@ -109,7 +113,16 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
       const orderRes = await fetch('/api/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tier, name, email, phone, coupon_code: couponCode.trim() || undefined }),
+        body: JSON.stringify({
+          tier,
+          name,
+          email,
+          phone,
+          coupon_code: couponCode.trim() || undefined,
+          gstin: wantsGstInvoice ? gstin.trim() || undefined : undefined,
+          billing_name: wantsGstInvoice ? billingName.trim() || undefined : undefined,
+          billing_address: wantsGstInvoice ? billingAddress.trim() || undefined : undefined,
+        }),
       });
       const order = await orderRes.json();
       if (!orderRes.ok || !order.ok) {
@@ -282,6 +295,62 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
                 className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:border-royal/50 disabled:opacity-50 uppercase placeholder:normal-case"
               />
             </div>
+
+            <label className="flex items-center gap-2 text-xs font-medium text-navy dark:text-white">
+              <input
+                type="checkbox"
+                checked={wantsGstInvoice}
+                onChange={(e) => setWantsGstInvoice(e.target.checked)}
+                disabled={step === 'processing'}
+                className="rounded border-navy/20"
+              />
+              Need a GST invoice for this payment?
+            </label>
+            {wantsGstInvoice && (
+              <div className="space-y-3 rounded-xl border border-navy/10 dark:border-white/15 p-3.5">
+                <div>
+                  <label htmlFor="checkout-gstin" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+                    GSTIN
+                  </label>
+                  <input
+                    id="checkout-gstin"
+                    type="text"
+                    value={gstin}
+                    onChange={(e) => setGstin(e.target.value.toUpperCase())}
+                    disabled={step === 'processing'}
+                    placeholder="22AAAAA0000A1Z5"
+                    maxLength={15}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm uppercase focus:border-royal/50 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="checkout-billing-name" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+                    Business / billing name
+                  </label>
+                  <input
+                    id="checkout-billing-name"
+                    type="text"
+                    value={billingName}
+                    onChange={(e) => setBillingName(e.target.value)}
+                    disabled={step === 'processing'}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:border-royal/50 disabled:opacity-50"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="checkout-billing-address" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+                    Billing address
+                  </label>
+                  <textarea
+                    id="checkout-billing-address"
+                    rows={2}
+                    value={billingAddress}
+                    onChange={(e) => setBillingAddress(e.target.value)}
+                    disabled={step === 'processing'}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:border-royal/50 disabled:opacity-50 resize-none"
+                  />
+                </div>
+              </div>
+            )}
 
             {error && (
               <div role="alert" className="flex gap-2 rounded-xl border border-red-400/30 bg-red-400/10 p-3 text-xs text-red-600 dark:text-red-300">

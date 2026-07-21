@@ -10,6 +10,7 @@ import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
 import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
 import { validateCoupon } from './_lib/coupons.js';
+import { isValidGstin } from './_lib/gst.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 8 }; // 8 order attempts / 10 min / IP
@@ -34,6 +35,10 @@ export default async function handler(req, res) {
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
   const { tier, name, email, phone } = body;
   const rawCouponCode = body.coupon_code ? String(body.coupon_code).trim().toUpperCase().slice(0, 50) : '';
+  // GST details are optional — only students who need a business invoice fill these in.
+  const gstin = body.gstin ? String(body.gstin).trim().toUpperCase().slice(0, 15) : null;
+  const billingName = body.billing_name ? String(body.billing_name).trim().slice(0, 200) : null;
+  const billingAddress = body.billing_address ? String(body.billing_address).trim().slice(0, 500) : null;
 
   const tierInfo = TIER_PRICES[tier];
   if (!tierInfo) {
@@ -46,6 +51,9 @@ export default async function handler(req, res) {
   if (!phone || String(phone).replace(/\D/g, '').length < 10) errors.push('phone');
   if (errors.length) {
     return res.status(400).json({ ok: false, error: 'Invalid or missing fields', fields: errors });
+  }
+  if (gstin && !isValidGstin(gstin)) {
+    return res.status(400).json({ ok: false, error: 'That GSTIN doesn’t look valid — double-check the 15-character format.' });
   }
 
   const keyId = process.env.RAZORPAY_KEY_ID;
@@ -91,6 +99,9 @@ export default async function handler(req, res) {
           phone: String(phone).trim().slice(0, 30),
           coupon_code: appliedCouponCode || '',
           discount_amount: String(discountAmount),
+          gstin: gstin || '',
+          billing_name: billingName || '',
+          billing_address: billingAddress || '',
         },
       }),
     });
@@ -130,6 +141,9 @@ export default async function handler(req, res) {
           status: 'created',
           coupon_code: appliedCouponCode,
           discount_amount: discountAmount,
+          gstin,
+          billing_name: billingName,
+          billing_address: billingAddress,
         }),
       });
     } catch (err) {

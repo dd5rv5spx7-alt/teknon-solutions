@@ -146,6 +146,9 @@ export default async function handler(req, res) {
     razorpay_payment_id: String(payment.id || '').slice(0, 100),
     coupon_code: payment.notes?.coupon_code || null,
     discount_amount: discountAmount,
+    gstin: payment.notes?.gstin || null,
+    billing_name: payment.notes?.billing_name || null,
+    billing_address: payment.notes?.billing_address || null,
     status: 'paid',
   };
 

@@ -124,6 +124,9 @@ export default async function handler(req, res) {
     status: 'paid',
     coupon_code: order.notes?.coupon_code || null,
     discount_amount: discountAmount,
+    gstin: order.notes?.gstin || null,
+    billing_name: order.notes?.billing_name || null,
+    billing_address: order.notes?.billing_address || null,
   };
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
