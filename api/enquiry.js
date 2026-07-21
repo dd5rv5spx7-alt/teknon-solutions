@@ -27,7 +27,7 @@ export default async function handler(req, res) {
   }
 
   const ip = getClientIp(req);
-  if (isRateLimited(ip, RATE_LIMIT)) {
+  if (await isRateLimited(ip, RATE_LIMIT, 'enquiry')) {
     return res.status(429).json({ ok: false, error: 'Too many requests — please try again in a few minutes.' });
   }
 

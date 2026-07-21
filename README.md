@@ -266,6 +266,7 @@ supabase/
   004_student_self_service.sql ← run this too if you set up Supabase before the student portal
   012_payments.sql          ← run this too if you set up Supabase before Razorpay payments
   013_database_hygiene.sql  ← run this too — index/FK cleanup, certificate tamper-fix, email-change guard
+  014_rate_limiting.sql     ← run this too — durable, cross-instance rate limiting (see api/_lib/rateLimit.js)
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)
@@ -297,4 +298,18 @@ Certificates, Assignments, a blog section, a careers page, and an events page.
 build log that the public marketing site's bundle no longer ships `recharts` (or any admin/student
 code) to visitors who never log in. If you add more heavy libraries to the admin or student side
 later, keep them behind that same `lazy()` boundary rather than importing them at the top of
-`App.jsx`, or they'll leak back into the bundle everyone downloads.
+`App.jsx`, or they'll leak back into the bundle everyone downloads. `AuthProvider` itself is lazy
+too now (see `src/routes/AdminApp.jsx` / `StudentApp.jsx` / `ResetPasswordApp.jsx`) — the Supabase
+SDK only loads for someone actually visiting one of those routes, not on the public homepage.
+
+## 8. Security notes
+
+- **No CORS headers on `/api/*` routes — intentional, not an oversight.** The API is same-origin
+  only (the frontend and API are served from the same domain) and uses bearer-token auth, not
+  cookies, so the browser's default same-origin policy already protects every endpoint. Adding a
+  permissive `Access-Control-Allow-Origin: *` later to "fix" a perceived missing header would
+  actually weaken this — don't.
+- Every public-facing `/api` route rate-limits by IP (`api/_lib/rateLimit.js`). It uses a durable,
+  shared counter in Supabase once `supabase/014_rate_limiting.sql` is run (falls back to a
+  per-instance in-memory counter otherwise, which is why running that migration matters — see
+  section 4.5).

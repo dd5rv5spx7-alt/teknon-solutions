@@ -31,6 +31,15 @@ export default async function handler(req, res) {
   if (!supabaseUrl || !serviceKey) {
     return res.status(200).json({ ok: true, skipped: 'Supabase not configured' });
   }
+
+  // Piggybacks on this existing daily cron rather than needing a dedicated
+  // schedule of its own: rate_limit_counters (see supabase/014_rate_limiting.sql)
+  // gets one row per IP per endpoint per rate-limit window, which would
+  // otherwise grow forever. The longest window in use across every endpoint
+  // is 60 minutes (api/admin/create-person.js), so anything older than 2
+  // hours is safely stale. Runs even if email isn't configured below.
+  await cleanupRateLimitCounters(supabaseUrl, serviceKey);
+
   if (!isEmailConfigured()) {
     return res.status(200).json({ ok: true, skipped: 'Email not configured' });
   }
@@ -82,6 +91,23 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({ ok: true, enquiries: enquiries.length, payments: paid.length });
+}
+
+async function cleanupRateLimitCounters(supabaseUrl, serviceKey) {
+  try {
+    const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+    const res = await fetch(`${supabaseUrl}/rest/v1/rate_limit_counters?updated_at=lt.${cutoff}`, {
+      method: 'DELETE',
+      headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}`, Prefer: 'count=exact' },
+    });
+    if (!res.ok) {
+      console.error('daily-digest: rate_limit_counters cleanup failed', res.status);
+    }
+  } catch (err) {
+    // Table may not exist yet if 014_rate_limiting.sql hasn't been run —
+    // don't let that block the digest email below.
+    console.error('daily-digest: rate_limit_counters cleanup threw', err);
+  }
 }
 
 async function fetchRows(supabaseUrl, serviceKey, path) {
