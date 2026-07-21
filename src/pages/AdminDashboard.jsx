@@ -10,7 +10,9 @@ const STATUS_META = {
   read: { label: 'Read', color: 'bg-slatesoft/10 dark:bg-white/10 text-slatesoft dark:text-white/60' },
   replied: { label: 'Replied', color: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400' },
   enrolled: { label: 'Enrolled', color: 'bg-gold/15 text-amber-600 dark:text-gold' },
-  archived: { label: 'Archived', color: 'bg-red-500/10 text-red-500' },
+  // Every other status here has a dark: override; this one didn't, leaving
+  // it as the one status pill without confirmed AA contrast in dark mode.
+  archived: { label: 'Archived', color: 'bg-red-500/10 text-red-600 dark:text-red-300' },
 };
 const FILTER_TABS = ['all', 'new', 'read', 'replied', 'enrolled', 'archived'];
 
@@ -159,7 +161,23 @@ export default function AdminDashboard() {
         )}
         {listError && <p className="text-sm text-red-500">Couldn&rsquo;t load enquiries: {listError}</p>}
         {!loadingList && !listError && filtered.length === 0 && (
-          <p className="text-sm text-slatesoft dark:text-white/50">No enquiries match.</p>
+          <div className="flex flex-col items-center gap-3 py-14 text-center">
+            <Inbox size={28} className="text-slatesoft/50 dark:text-white/25" />
+            <p className="text-sm text-slatesoft dark:text-white/50">
+              {search || statusFilter !== 'all' ? 'No enquiries match your search or filter.' : 'No enquiries yet.'}
+            </p>
+            {(search || statusFilter !== 'all') && (
+              <button
+                onClick={() => {
+                  setSearch('');
+                  setStatusFilter('all');
+                }}
+                className="text-sm font-semibold text-royal dark:text-accent hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
         )}
 
         {filtered.length > 0 && (

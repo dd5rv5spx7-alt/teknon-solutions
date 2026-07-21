@@ -55,14 +55,18 @@ export default function AdminLayout() {
             </button>
           </div>
         </div>
-        <nav className="sm:hidden flex items-center gap-1 px-4 pb-3">
+        {/* 8 nav items don't fit one row on a 375px viewport — this used to
+            wrap unpredictably (or force the whole page to scroll sideways)
+            with no indication more items existed. overflow-x-auto turns it
+            into a deliberate swipeable tab strip instead. */}
+        <nav className="sm:hidden flex items-center gap-1 px-4 pb-3 overflow-x-auto no-scrollbar">
           {ADMIN_NAV.map((item) => (
             <NavLink
               key={item.to}
               to={item.to}
               end={item.end}
               className={({ isActive }) =>
-                `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+                `inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition-colors ${
                   isActive
                     ? 'bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent'
                     : 'text-slatesoft dark:text-white/60'
