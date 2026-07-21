@@ -21,10 +21,9 @@
 import crypto from 'node:crypto';
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
 import { TIER_PRICES } from './_lib/pricing.js';
-import { sendEmail, isEmailConfigured, escapeHtml } from './_lib/email.js';
-import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL, rupees } from './_lib/emailTemplates.js';
+import { sendEmail, isEmailConfigured } from './_lib/email.js';
+import { TEAM_EMAIL, adminPaymentEmailHtml, studentPaymentEmailHtml } from './_lib/emailTemplates.js';
 
-const TEAM_EMAIL = 'info@ateknonsolutions.com';
 const MAX_BODY_BYTES = 5_000;
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 20 }; // 20 verify attempts / 10 min / IP
 const SIGNATURE_RE = /^[0-9a-f]{64}$/i; // a HMAC-SHA256 hex digest is always exactly this shape
@@ -189,37 +188,4 @@ function safeParse(str) {
   } catch {
     return {};
   }
-}
-
-function adminPaymentEmailHtml(p, tierInfo) {
-  return internalEmailHtml({
-    emoji: '💳',
-    title: 'Payment Received',
-    ctaHref: ADMIN_URL,
-    rows: [
-      emailRow('Name', p.name),
-      emailRow('Email', p.email),
-      emailRow('Phone', p.phone),
-      emailRow('Program', tierInfo.label),
-      emailRow('Amount', rupees(p.amount)),
-      emailRow('Razorpay Payment ID', p.razorpay_payment_id),
-      emailRow('Razorpay Order ID', p.razorpay_order_id),
-    ],
-  });
-}
-
-function studentPaymentEmailHtml(p, tierInfo) {
-  return customerEmailHtml({
-    greetingName: p.name,
-    whatsappHref: WHATSAPP_HREF,
-    bodyHtml: `
-        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
-          Your payment of <b style="color:#0B1F4D;">${rupees(p.amount)}</b> for the
-          <b style="color:#0B1F4D;">${escapeHtml(tierInfo.label)}</b> program is confirmed. Our team
-          will reach out shortly with your batch details and next steps.
-        </p>
-        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
-          Keep this email as your receipt — payment ID <code style="color:#0B1F4D;">${escapeHtml(p.razorpay_payment_id)}</code>.
-        </p>`,
-  });
 }

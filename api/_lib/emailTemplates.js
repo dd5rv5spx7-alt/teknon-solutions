@@ -71,7 +71,45 @@ export function customerEmailHtml({ greetingName, bodyHtml, whatsappHref }) {
 
 export const WHATSAPP_HREF = 'https://wa.me/918897571616';
 export const ADMIN_URL = 'https://ateknonsolutions.com/admin';
+export const TEAM_EMAIL = 'info@ateknonsolutions.com';
 
 export function rupees(paise) {
   return `₹${(paise / 100).toLocaleString('en-IN')}`;
+}
+
+// Shared by api/verify-payment.js (browser-confirmed path) and
+// api/razorpay-webhook.js (reliability-backstop path) — kept here instead of
+// duplicated in both, since a payment receipt is the one email in this
+// system where a two-file edit going out of sync actually matters.
+export function adminPaymentEmailHtml(p, tierInfo) {
+  return internalEmailHtml({
+    emoji: '💳',
+    title: 'Payment Received',
+    ctaHref: ADMIN_URL,
+    rows: [
+      emailRow('Name', p.name),
+      emailRow('Email', p.email),
+      emailRow('Phone', p.phone),
+      emailRow('Program', tierInfo.label),
+      emailRow('Amount', rupees(p.amount)),
+      emailRow('Razorpay Payment ID', p.razorpay_payment_id),
+      emailRow('Razorpay Order ID', p.razorpay_order_id),
+    ],
+  });
+}
+
+export function studentPaymentEmailHtml(p, tierInfo) {
+  return customerEmailHtml({
+    greetingName: p.name,
+    whatsappHref: WHATSAPP_HREF,
+    bodyHtml: `
+        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
+          Your payment of <b style="color:#0B1F4D;">${rupees(p.amount)}</b> for the
+          <b style="color:#0B1F4D;">${escapeHtml(tierInfo.label)}</b> program is confirmed. Our team
+          will reach out shortly with your batch details and next steps.
+        </p>
+        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
+          Keep this email as your receipt — payment ID <code style="color:#0B1F4D;">${escapeHtml(p.razorpay_payment_id)}</code>.
+        </p>`,
+  });
 }

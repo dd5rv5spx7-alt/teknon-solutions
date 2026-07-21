@@ -7,10 +7,9 @@
 
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
 import { sendEmail, isEmailConfigured, escapeHtml } from './_lib/email.js';
-import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL } from './_lib/emailTemplates.js';
+import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL, TEAM_EMAIL } from './_lib/emailTemplates.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TEAM_EMAIL = 'info@ateknonsolutions.com';
 const DEDUPE_WINDOW_MS = 2 * 60 * 1000; // reject a second identical-email submit within 2 minutes
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 5 }; // 5 submissions / 10 min / IP
 const MAX_BODY_BYTES = 20_000; // real payloads top out around 3KB; this is generous headroom

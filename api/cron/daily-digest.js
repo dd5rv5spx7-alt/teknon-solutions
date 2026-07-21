@@ -9,10 +9,8 @@
 // what keeps this endpoint from being triggered by anyone who finds the URL.
 
 import { sendEmail, isEmailConfigured } from '../_lib/email.js';
-import { emailRow, internalEmailHtml, ADMIN_URL, rupees } from '../_lib/emailTemplates.js';
+import { emailRow, internalEmailHtml, ADMIN_URL, rupees, TEAM_EMAIL } from '../_lib/emailTemplates.js';
 import { TIER_PRICES } from '../_lib/pricing.js';
-
-const TEAM_EMAIL = 'info@ateknonsolutions.com';
 
 export default async function handler(req, res) {
   if (req.method !== 'GET') {

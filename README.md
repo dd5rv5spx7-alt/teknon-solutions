@@ -107,6 +107,19 @@ no separate email-service account, no sender-domain verification dance. Every em
 sends shows up in that mailbox's own Sent folder, and replies land straight in the inbox you
 already check.
 
+> ⚠️ **Before you set this up:** a DNS check on `ateknonsolutions.com` found its MX and SPF
+> records currently pointing at `secureserver.net` (GoDaddy), not `titan.email`. If that's still
+> true, sending through `smtp.titan.email` will likely fail SPF/DKIM checks — and since the domain
+> already publishes a DMARC policy of `p=quarantine`, receiving inboxes (Gmail, Outlook, etc.) may
+> route your payment receipts and enquiry confirmations straight to spam, or reject them outright.
+> **First, confirm in your domain host's control panel which service `info@ateknonsolutions.com`
+> is actually hosted on.** If it's genuinely Titan Mail, add Titan's required SPF include and DKIM
+> records to your DNS (from Titan's own dashboard) before relying on this for real traffic. If the
+> mailbox is actually on GoDaddy, set `SMTP_HOST` to GoDaddy's SMTP relay instead (e.g.
+> `smtpout.secureserver.net`) so it matches what DNS already authorizes. Either way, send yourself
+> a real test email once configured and check it with [mail-tester.com](https://www.mail-tester.com)
+> before trusting it for customer-facing mail.
+
 1. Open your Titan Mail webmail (usually reachable from your domain host's email dashboard) and
    confirm the outgoing (SMTP) server under Settings — it's typically `smtp.titan.email` on port
    `465`. Only deviate from those if your provider's settings page shows something different.

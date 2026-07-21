@@ -12,10 +12,15 @@
 
 import crypto from 'node:crypto';
 import { TIER_PRICES } from './_lib/pricing.js';
-import { sendEmail, isEmailConfigured, escapeHtml } from './_lib/email.js';
-import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL, rupees } from './_lib/emailTemplates.js';
-
-const TEAM_EMAIL = 'info@ateknonsolutions.com';
+import { sendEmail, isEmailConfigured } from './_lib/email.js';
+import {
+  TEAM_EMAIL,
+  emailRow,
+  internalEmailHtml,
+  ADMIN_URL,
+  adminPaymentEmailHtml,
+  studentPaymentEmailHtml,
+} from './_lib/emailTemplates.js';
 
 export const config = {
   api: {
@@ -82,12 +87,29 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, ignored: 'unrecognized tier or payload shape' });
   }
 
+  // Trust what Razorpay says was actually captured (payment.amount), never
+  // what the currently-deployed pricing.js says a tier costs right now — a
+  // price edited between order-creation and this webhook firing must never
+  // change what gets recorded for an already-completed transaction. If the
+  // captured amount doesn't match any known price for this tier, something's
+  // wrong (stale price map, tampered notes) — money still moved, so record it
+  // rather than silently drop it, but flag it for a human to check rather
+  // than trusting the mismatch.
+  if (payment.amount !== tierInfo.amount) {
+    console.error('razorpay-webhook: captured amount does not match current tier price — recording amount as-captured for manual review', {
+      payment_id: payment.id,
+      tier,
+      capturedAmount: payment.amount,
+      currentTierAmount: tierInfo.amount,
+    });
+  }
+
   const clean = {
     name: String(payment.notes?.name || payment.email || 'Unknown').slice(0, 200),
     email: String(payment.notes?.email || payment.email || '').slice(0, 200),
     phone: String(payment.notes?.phone || payment.contact || '').slice(0, 30),
     tier,
-    amount: tierInfo.amount,
+    amount: payment.amount,
     currency: 'INR',
     razorpay_order_id: String(payment.order_id || '').slice(0, 100),
     razorpay_payment_id: String(payment.id || '').slice(0, 100),
@@ -183,39 +205,6 @@ async function notifyPaymentFailed(payment) {
   } catch (err) {
     console.error('razorpay-webhook: payment.failed alert email failed', err);
   }
-}
-
-function adminPaymentEmailHtml(p, tierInfo) {
-  return internalEmailHtml({
-    emoji: '💳',
-    title: 'Payment Received',
-    ctaHref: ADMIN_URL,
-    rows: [
-      emailRow('Name', p.name),
-      emailRow('Email', p.email),
-      emailRow('Phone', p.phone),
-      emailRow('Program', tierInfo.label),
-      emailRow('Amount', rupees(p.amount)),
-      emailRow('Razorpay Payment ID', p.razorpay_payment_id),
-      emailRow('Razorpay Order ID', p.razorpay_order_id),
-    ],
-  });
-}
-
-function studentPaymentEmailHtml(p, tierInfo) {
-  return customerEmailHtml({
-    greetingName: p.name,
-    whatsappHref: WHATSAPP_HREF,
-    bodyHtml: `
-        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
-          Your payment of <b style="color:#0B1F4D;">${rupees(p.amount)}</b> for the
-          <b style="color:#0B1F4D;">${escapeHtml(tierInfo.label)}</b> program is confirmed. Our team
-          will reach out shortly with your batch details and next steps.
-        </p>
-        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
-          Keep this email as your receipt — payment ID <code style="color:#0B1F4D;">${escapeHtml(p.razorpay_payment_id)}</code>.
-        </p>`,
-  });
 }
 
 // Buffers chunks as Buffers and concatenates once at the end. Concatenating

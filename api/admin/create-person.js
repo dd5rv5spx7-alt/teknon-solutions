@@ -48,12 +48,18 @@ export default async function handler(req, res) {
   }
 
   try {
-    const roleRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${callerId}&select=role`, {
+    const roleRes = await fetch(`${supabaseUrl}/rest/v1/profiles?id=eq.${callerId}&select=role,status`, {
       headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` },
     });
     const [callerProfile] = roleRes.ok ? await roleRes.json() : [];
-    if (callerProfile?.role !== 'admin') {
-      return res.status(403).json({ ok: false, error: 'Only admins can add people.' });
+    // A deactivated admin's Supabase session can stay valid for a while after
+    // another admin flips their status to 'inactive' — this endpoint uses the
+    // service_role key, so it bypasses RLS and must replicate the same
+    // active-status check the RLS layer already enforces everywhere else
+    // (see supabase/006_enforce_active_status_in_rls.sql), or a deactivated
+    // admin could keep minting new accounts until their token expires.
+    if (callerProfile?.role !== 'admin' || callerProfile?.status !== 'active') {
+      return res.status(403).json({ ok: false, error: 'Only active admins can add people.' });
     }
   } catch (err) {
     return res.status(500).json({ ok: false, error: 'Could not verify your permissions.' });
