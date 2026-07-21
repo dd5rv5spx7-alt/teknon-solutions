@@ -228,7 +228,7 @@ export default function Contact() {
                 </div>
                 <div className="sm:col-span-1">
                   <label htmlFor="college" className="block text-sm font-medium text-navy dark:text-white mb-2">
-                    College <span className="text-slatesoft dark:text-white/40 font-normal">(optional)</span>
+                    College <span className="text-slatesoft dark:text-white/55 font-normal">(optional)</span>
                   </label>
                   <input
                     id="college"
@@ -243,7 +243,7 @@ export default function Contact() {
                 </div>
                 <div className="sm:col-span-1">
                   <label htmlFor="year" className="block text-sm font-medium text-navy dark:text-white mb-2">
-                    Year <span className="text-slatesoft dark:text-white/40 font-normal">(optional)</span>
+                    Year <span className="text-slatesoft dark:text-white/55 font-normal">(optional)</span>
                   </label>
                   <select
                     id="year"
@@ -316,7 +316,7 @@ export default function Contact() {
                     <Send size={16} />
                   </button>
                   {status === 'error' && (
-                    <p className="mt-3 text-sm text-center text-red-500">
+                    <p className="mt-3 text-sm text-center text-red-600 dark:text-red-300">
                       Something went wrong — please try WhatsApp or call us directly instead.
                     </p>
                   )}

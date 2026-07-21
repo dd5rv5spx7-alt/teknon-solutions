@@ -1,11 +1,12 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import logoUrl from '../assets/logo.svg';
 
 // Logo artwork is a fixed 1402x1122 lockup (monogram + two-line wordmark
 // baked into one image) — width is derived to preserve that aspect ratio.
 const ASPECT = 1402 / 1122;
 
-export default function Logo({ variant = 'dark', size = 'md', className = '' }) {
+export default function Logo({ variant = 'dark', size = 'md', className = '', to }) {
   const onDarkBackground = variant === 'light';
   const height = size === 'lg' ? 92 : size === 'sm' ? 52 : 68;
   const width = Math.round(height * ASPECT);
@@ -28,6 +29,16 @@ export default function Logo({ variant = 'dark', size = 'md', className = '' }) 
   const chipClasses = onDarkBackground
     ? 'bg-white rounded-2xl p-2 shadow-[0_0_28px_2px_rgba(30,94,255,0.4)]'
     : 'dark:bg-white dark:rounded-2xl dark:p-2 dark:shadow-[0_0_28px_2px_rgba(30,94,255,0.4)]';
+
+  // Standalone routes (the login pages) have no #home element to jump to —
+  // they need a real navigation, not an anchor link that no-ops there.
+  if (to) {
+    return (
+      <Link to={to} className={`flex items-center shrink-0 group ${className}`} aria-label="A Teknon Solutions home">
+        <span className={chipClasses}>{img}</span>
+      </Link>
+    );
+  }
 
   return (
     <a href="#home" className={`flex items-center shrink-0 group ${className}`} aria-label="A Teknon Solutions home">

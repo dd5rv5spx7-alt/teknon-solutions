@@ -19,6 +19,11 @@ function loadRazorpayScript() {
   return razorpayScriptPromise;
 }
 
+// Matches the transition-duration below — kept in one place so the
+// setTimeout that actually unmounts the modal can't drift out of sync with
+// the CSS and cut the exit animation off mid-way.
+const TRANSITION_MS = 200;
+
 // tier: 'starter' | 'professional' | 'advanced' — must match api/_lib/pricing.js keys.
 export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }) {
   const [step, setStep] = useState('form'); // form | processing | success | error
@@ -26,9 +31,30 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState('');
+  const [visible, setVisible] = useState(false); // drives the fade/scale transition
 
   const dialogRef = useRef(null);
   const previouslyFocused = useRef(null);
+
+  // Two rAFs (not one): the first lets the initial "hidden" class actually
+  // paint before the second flips it to "visible" — collapsing to a single
+  // rAF risks the browser batching both class states into one frame, which
+  // skips the transition entirely on some devices.
+  useEffect(() => {
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, []);
+
+  // Plays the exit transition, then calls the real onClose once it's done —
+  // the parent unmounts this component immediately on that call, so the
+  // fade/scale-out has to happen before it, not after.
+  function requestClose() {
+    setVisible(false);
+    setTimeout(onClose, TRANSITION_MS);
+  }
 
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
@@ -37,7 +63,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
 
     function handleKeyDown(e) {
       if (e.key === 'Escape' && step !== 'processing') {
-        onClose();
+        requestClose();
         return;
       }
       if (e.key === 'Tab' && focusable.length > 0) {
@@ -58,7 +84,20 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
       document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused.current?.focus?.();
     };
-  }, [onClose, step]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  // aria-modal="true" isn't reliably enough on its own to keep a screen
+  // reader's virtual cursor out of content behind the dialog — inert on the
+  // page root enforces it, matching the same fix applied to Navbar's mobile
+  // menu.
+  useEffect(() => {
+    const root = document.getElementById('site-root');
+    if (root) root.inert = true;
+    return () => {
+      if (root) root.inert = false;
+    };
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -135,13 +174,20 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
   }
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4" onClick={step !== 'processing' ? onClose : undefined}>
+    <div
+      className={`fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ease-out ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+      onClick={step !== 'processing' ? requestClose : undefined}
+    >
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="checkout-modal-title"
-        className="w-full max-w-sm rounded-3xl bg-white dark:bg-navy p-7 shadow-card-lg"
+        className={`w-full max-w-sm rounded-3xl bg-white dark:bg-navy p-7 shadow-card-lg transition-all duration-200 ease-out ${
+          visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
@@ -149,7 +195,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
             {step === 'success' ? 'Payment confirmed' : `Enroll — ${tierLabel}`}
           </h2>
           {step !== 'processing' && (
-            <button onClick={onClose} aria-label="Close" className="text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white">
+            <button onClick={requestClose} aria-label="Close" className="text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white">
               <X size={18} />
             </button>
           )}
@@ -163,7 +209,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
               out shortly with your batch details.
             </p>
             <button
-              onClick={onClose}
+              onClick={requestClose}
               className="btn-glow w-full mt-6 bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all"
             >
               Done

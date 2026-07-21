@@ -19,14 +19,19 @@
     scroll-margin-top: 96px;
   }
 
-  /* Visible keyboard focus, always */
+  /* Visible keyboard focus, always. A flat royal-blue outline measures
+     2.6-3.1:1 against the app's dark navy/glass surfaces (login cards,
+     checkout modal, Contact's dark inputs) — below WCAG's 3:1 minimum for
+     non-text contrast. A white ring with a dark halo clears 3:1 on every
+     surface in both themes instead of needing a per-surface override. */
   a:focus-visible,
   button:focus-visible,
   input:focus-visible,
   textarea:focus-visible,
   select:focus-visible {
-    outline: 2px solid #1E5EFF;
-    outline-offset: 3px;
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(11, 31, 77, 0.6);
     border-radius: 4px;
   }
 
@@ -44,8 +49,11 @@
     @apply bg-clip-text text-transparent bg-gradient-to-r from-royal to-accent;
   }
 
+  /* End stop darkened from the original #2F80ED (3.87:1 with white text —
+     fails WCAG AA) to #1E56E0 (6.06:1) — every primary CTA site-wide shares
+     this utility, so the fix applies everywhere at once. */
   .bg-grad-primary {
-    background: linear-gradient(135deg, #1E5EFF 0%, #2F80ED 100%);
+    background: linear-gradient(135deg, #1E5EFF 0%, #1E56E0 100%);
   }
 
   .bg-grad-navy {
@@ -189,26 +197,6 @@
     width: 50%;
   }
 
-  /* Quick shine sweep, used sparingly on ribbon badges */
-  .shine {
-    position: relative;
-    overflow: hidden;
-  }
-  .shine::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -60%;
-    width: 45%;
-    height: 100%;
-    background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
-    animation: shine-sweep 3.6s ease-in-out infinite;
-  }
-  @keyframes shine-sweep {
-    0% { left: -60%; }
-    18% { left: 130%; }
-    100% { left: 130%; }
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -85,7 +85,7 @@ export default function StudentDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-mist dark:bg-navy-deep">
+    <div id="student-dashboard-root" className="min-h-screen bg-mist dark:bg-navy-deep">
       <header className="bg-white dark:bg-navy border-b border-navy/8 dark:border-white/10">
         <div className="container-px mx-auto max-w-8xl h-20 flex items-center justify-between">
           <Logo />
@@ -287,9 +287,33 @@ export default function StudentDashboard() {
   );
 }
 
+const MODAL_TRANSITION_MS = 200;
+
 function CertificateModal({ certificate, studentName, onClose }) {
   const dialogRef = useRef(null);
   const previouslyFocused = useRef(null);
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => setVisible(true));
+      return () => cancelAnimationFrame(raf2);
+    });
+    return () => cancelAnimationFrame(raf1);
+  }, []);
+
+  function requestClose() {
+    setVisible(false);
+    setTimeout(onClose, MODAL_TRANSITION_MS);
+  }
+
+  useEffect(() => {
+    const root = document.getElementById('student-dashboard-root');
+    if (root) root.inert = true;
+    return () => {
+      if (root) root.inert = false;
+    };
+  }, []);
 
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
@@ -298,7 +322,7 @@ function CertificateModal({ certificate, studentName, onClose }) {
 
     function handleKeyDown(e) {
       if (e.key === 'Escape') {
-        onClose();
+        requestClose();
         return;
       }
       if (e.key === 'Tab' && focusable.length > 0) {
@@ -319,23 +343,31 @@ function CertificateModal({ certificate, studentName, onClose }) {
       document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused.current?.focus?.();
     };
-  }, [onClose]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+    <div
+      className={`fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ease-out ${
+        visible ? 'opacity-100' : 'opacity-0'
+      }`}
+      onClick={requestClose}
+    >
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="certificate-modal-title"
-        className="w-full max-w-lg rounded-3xl bg-white dark:bg-navy p-7 shadow-card-lg"
+        className={`w-full max-w-lg rounded-3xl bg-white dark:bg-navy p-7 shadow-card-lg transition-all duration-200 ease-out ${
+          visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between mb-5">
           <h2 id="certificate-modal-title" className="font-display font-bold text-lg text-navy dark:text-white">
             Certificate
           </h2>
-          <button onClick={onClose} aria-label="Close" className="text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white">
+          <button onClick={requestClose} aria-label="Close" className="text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white">
             <X size={18} />
           </button>
         </div>

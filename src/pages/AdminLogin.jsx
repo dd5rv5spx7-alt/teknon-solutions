@@ -4,6 +4,7 @@ import { Lock, AlertCircle } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import ForgotPassword from '../components/ForgotPassword.jsx';
 import PasswordField from '../components/PasswordField.jsx';
+import Seo from '../components/Seo.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function AdminLogin() {
@@ -49,14 +50,23 @@ export default function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-grad-navy flex items-center justify-center px-6 relative overflow-hidden">
+      <Seo
+        title="Staff sign in — A Teknon Solutions"
+        description="Sign in to the A Teknon Solutions admin dashboard for staff and faculty."
+        path="/admin/login"
+        noindex
+      />
       <div className="absolute inset-0 bg-dot-grid opacity-30" aria-hidden="true" />
       <div className="relative w-full max-w-sm">
         <div className="flex justify-center mb-8">
-          <Logo variant="light" size="lg" />
+          <Logo variant="light" size="lg" to="/" />
         </div>
 
         <div className="glass rounded-3xl p-8">
-          <span className="eyebrow text-accent">
+          {/* text-accent (#2F80ED) measures 3.53:1 on this glass card — below
+              AA for normal text. #7DB8FF (already used for the same navy-on-
+              dark pairing in the email templates) clears 6.6:1. */}
+          <span className="eyebrow text-[#7DB8FF]">
             <Lock size={13} /> Staff access
           </span>
           <h1 className="mt-3 font-display font-extrabold text-2xl text-white">Sign in</h1>

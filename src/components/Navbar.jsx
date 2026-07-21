@@ -77,6 +77,22 @@ export default function Navbar() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [mobileOpen]);
 
+  // aria-modal="true" alone isn't reliably enough to keep a screen-reader's
+  // virtual cursor out of content behind an open dialog — inert on every
+  // sibling of the menu (main content, footer) is what actually enforces it,
+  // on top of the existing Tab-trap above.
+  useEffect(() => {
+    const siblings = document.querySelectorAll('#site-root > main, #site-root > footer, #site-root > a');
+    siblings.forEach((el) => {
+      el.inert = mobileOpen;
+    });
+    return () => {
+      siblings.forEach((el) => {
+        el.inert = false;
+      });
+    };
+  }, [mobileOpen]);
+
   return (
     <header
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
@@ -95,6 +111,7 @@ export default function Navbar() {
               <a
                 key={link.href}
                 href={link.href}
+                aria-current={isActive ? 'true' : undefined}
                 className={`relative pb-1 text-sm font-medium transition-colors ${
                   isActive
                     ? scrolled

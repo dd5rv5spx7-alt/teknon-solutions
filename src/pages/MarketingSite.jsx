@@ -21,10 +21,10 @@ import WhatsAppButton from '../components/WhatsAppButton.jsx';
 
 export default function MarketingSite() {
   return (
-    <div className="min-h-screen bg-white dark:bg-navy transition-colors duration-300">
+    <div id="site-root" className="min-h-screen bg-white dark:bg-navy transition-colors duration-300">
       <Seo
         title="A Teknon Solutions | IT Internship & Training Institute, Rajahmundry"
-        description="A Teknon Solutions offers industry-oriented IT internships and training in Python, Full Stack, Java, AI, Cybersecurity & more. Live projects, expert mentorship, certification and placement assistance. Online & offline classes in Rajahmundry."
+        description="IT internships & training in Python, Full Stack, Java, AI, and Cybersecurity — live projects, mentorship, certification, placement help. Rajahmundry."
         ogTitle="A Teknon Solutions | Learn. Build. Grow."
         ogDescription="Industry-oriented IT internships & training — live projects, expert mentorship, certification and placement assistance. Online & offline classes in Rajahmundry."
         path="/"
