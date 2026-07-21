@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X, CalendarCheck } from 'lucide-react';
+import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X, CalendarCheck, FileCheck2, Send } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
@@ -25,6 +25,12 @@ export default function StudentDashboard() {
 
   const [attendance, setAttendance] = useState([]);
   const [loadingAttendance, setLoadingAttendance] = useState(true);
+
+  const [assignments, setAssignments] = useState([]);
+  const [submissions, setSubmissions] = useState({}); // assignment_id -> submission row
+  const [loadingAssignments, setLoadingAssignments] = useState(true);
+  const [draftByAssignment, setDraftByAssignment] = useState({}); // assignment_id -> { text, url }
+  const [submittingId, setSubmittingId] = useState(null);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -79,7 +85,50 @@ export default function StudentDashboard() {
         setAttendance(data ?? []);
         setLoadingAttendance(false);
       });
+
+    supabase
+      .from('assignments')
+      .select('*, courses(title)')
+      .order('due_date', { ascending: true, nullsFirst: false })
+      .then(async ({ data: assignmentData }) => {
+        setAssignments(assignmentData ?? []);
+        const ids = (assignmentData ?? []).map((a) => a.id);
+        if (ids.length > 0) {
+          const { data: subData } = await supabase
+            .from('assignment_submissions')
+            .select('*')
+            .eq('student_id', session.user.id)
+            .in('assignment_id', ids);
+          const byAssignment = {};
+          (subData ?? []).forEach((s) => {
+            byAssignment[s.assignment_id] = s;
+          });
+          setSubmissions(byAssignment);
+        }
+        setLoadingAssignments(false);
+      });
   }, [session?.user?.id]);
+
+  async function submitAssignment(assignmentId) {
+    const draft = draftByAssignment[assignmentId] || {};
+    if (!draft.text?.trim() && !draft.url?.trim()) return;
+    setSubmittingId(assignmentId);
+    const payload = {
+      assignment_id: assignmentId,
+      student_id: session.user.id,
+      submission_text: draft.text?.trim() || null,
+      submission_url: draft.url?.trim() || null,
+    };
+    const { data, error } = await supabase
+      .from('assignment_submissions')
+      .upsert(payload, { onConflict: 'assignment_id,student_id' })
+      .select()
+      .single();
+    setSubmittingId(null);
+    if (!error) {
+      setSubmissions((prev) => ({ ...prev, [assignmentId]: data }));
+    }
+  }
 
   async function saveProfile(e) {
     e.preventDefault();
@@ -113,9 +162,9 @@ export default function StudentDashboard() {
 
       <main className="container-px mx-auto max-w-8xl py-12">
         <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-800 dark:text-amber-200 mb-8">
-          Profile, Courses, Certificates, and Attendance are real below. Downloads and Notifications
-          from CLAUDE.md's full spec aren't built yet. Progress <em>is</em> tracked — open a
-          course's Continue Learning link to see per-lesson completion.
+          Profile, Courses, Assignments, Certificates, and Attendance are real below. Downloads and
+          Notifications from CLAUDE.md's full spec aren't built yet. Progress <em>is</em> tracked —
+          open a course's Continue Learning link to see per-lesson completion.
         </div>
 
         <h1 className="font-display font-bold text-2xl text-navy dark:text-white mb-1">
@@ -218,6 +267,82 @@ export default function StudentDashboard() {
                   </Link>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Assignments */}
+        <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 mb-6">
+          <h2 className="text-sm font-semibold text-navy dark:text-white mb-4 flex items-center gap-2">
+            <FileCheck2 size={15} /> Assignments
+          </h2>
+          {loadingAssignments ? (
+            <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+              <Loader2 size={15} className="animate-spin" /> Loading…
+            </div>
+          ) : assignments.length === 0 ? (
+            <p className="text-sm text-slatesoft dark:text-white/50">No assignments posted yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {assignments.map((a) => {
+                const sub = submissions[a.id];
+                return (
+                  <div key={a.id} className="border-b border-navy/5 dark:border-white/5 pb-4 last:border-0 last:pb-0">
+                    <div className="flex items-start justify-between gap-3 mb-1.5">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-navy dark:text-white">{a.title}</p>
+                        <p className="text-xs text-slatesoft dark:text-white/40">
+                          {a.courses?.title}
+                          {a.due_date ? ` · due ${new Date(a.due_date).toLocaleDateString()}` : ''}
+                          {a.max_score ? ` · out of ${a.max_score}` : ''}
+                        </p>
+                      </div>
+                      {sub && (
+                        <span
+                          className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold ${
+                            sub.status === 'graded'
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'bg-gold/15 text-amber-600 dark:text-gold'
+                          }`}
+                        >
+                          {sub.status === 'graded' ? `Graded — ${sub.grade ?? '—'}${a.max_score ? `/${a.max_score}` : ''}` : 'Submitted'}
+                        </span>
+                      )}
+                    </div>
+                    {a.description && <p className="text-xs text-slatesoft dark:text-white/50 mb-2">{a.description}</p>}
+                    {sub?.status === 'graded' && sub.feedback && (
+                      <p className="text-xs text-navy dark:text-white/80 bg-mist dark:bg-white/5 rounded-lg p-2.5 mb-2">
+                        <b>Feedback:</b> {sub.feedback}
+                      </p>
+                    )}
+                    {(!sub || sub.status !== 'graded') && (
+                      <div className="flex flex-col sm:flex-row gap-2 mt-2">
+                        <input
+                          type="text"
+                          placeholder="Notes or answer…"
+                          defaultValue={sub?.submission_text || ''}
+                          onChange={(e) => setDraftByAssignment((d) => ({ ...d, [a.id]: { ...d[a.id], text: e.target.value } }))}
+                          className="flex-1 px-3 py-2 rounded-lg border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-xs focus:border-royal/50"
+                        />
+                        <input
+                          type="url"
+                          placeholder="Link (optional)"
+                          defaultValue={sub?.submission_url || ''}
+                          onChange={(e) => setDraftByAssignment((d) => ({ ...d, [a.id]: { ...d[a.id], url: e.target.value } }))}
+                          className="flex-1 px-3 py-2 rounded-lg border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-xs focus:border-royal/50"
+                        />
+                        <button
+                          onClick={() => submitAssignment(a.id)}
+                          disabled={submittingId === a.id}
+                          className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 rounded-lg text-xs font-semibold bg-grad-primary text-white hover:brightness-110 transition-all disabled:opacity-50 shrink-0"
+                        >
+                          <Send size={12} /> {sub ? 'Resubmit' : 'Submit'}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
