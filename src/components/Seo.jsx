@@ -18,6 +18,10 @@ export default function Seo({
   ogTitle,
   ogDescription,
   noindex = false,
+  type = 'website',
+  articlePublishedTime,
+  articleAuthor,
+  jsonLd,
 }) {
   const url = `${SITE_URL}${path}`;
   const isDefaultImage = image === DEFAULT_IMAGE;
@@ -36,7 +40,7 @@ export default function Seo({
         content={noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'}
       />
 
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content={type} />
       <meta property="og:title" content={ogTitle || title} />
       <meta property="og:description" content={ogDescription || description} />
       <meta property="og:url" content={url} />
@@ -50,12 +54,16 @@ export default function Seo({
       {isDefaultImage && <meta property="og:image:type" content="image/png" />}
       {isDefaultImage && <meta property="og:image:width" content="1200" />}
       {isDefaultImage && <meta property="og:image:height" content="630" />}
+      {type === 'article' && articlePublishedTime && <meta property="article:published_time" content={articlePublishedTime} />}
+      {type === 'article' && articleAuthor && <meta property="article:author" content={articleAuthor} />}
 
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={ogTitle || title} />
       <meta name="twitter:description" content={ogDescription || description} />
       <meta name="twitter:image" content={image} />
       <meta name="twitter:image:alt" content={imageAlt} />
+
+      {jsonLd && <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>}
     </Helmet>
   );
 }

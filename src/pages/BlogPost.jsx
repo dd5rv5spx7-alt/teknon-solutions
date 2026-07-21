@@ -39,13 +39,49 @@ export default function BlogPost() {
 
   return (
     <div className="min-h-screen bg-white dark:bg-navy transition-colors duration-300">
-      {post && (
+      {/* Always render Seo — regardless of loading/not-found state — so the
+          canonical/title/robots tags always match what's actually on screen.
+          Previously this only rendered when `post` was truthy: a client-side
+          nav from a valid post to an invalid slug left the PREVIOUS post's
+          title/canonical/OG tags stuck in the DOM (Helmet doesn't reset tags
+          when no instance re-renders), and an invalid slug was a soft-404 —
+          HTTP 200 with no noindex, since the SPA catch-all in vercel.json
+          returns 200 for every non-file route. */}
+      {post ? (
         <Seo
           title={`${post.meta_title || post.title} | A Teknon Solutions`}
           description={post.meta_description || post.excerpt || `Read "${post.title}" on the A Teknon Solutions blog.`}
           path={`/blog/${slug}`}
           image={post.featured_image || undefined}
+          type="article"
+          articlePublishedTime={post.published_at || undefined}
+          articleAuthor={post.author_name || undefined}
+          jsonLd={{
+            '@context': 'https://schema.org',
+            '@type': 'BlogPosting',
+            headline: post.title,
+            description: post.meta_description || post.excerpt || undefined,
+            image: post.featured_image || undefined,
+            datePublished: post.published_at || undefined,
+            dateModified: post.updated_at || post.published_at || undefined,
+            author: post.author_name ? { '@type': 'Person', name: post.author_name } : undefined,
+            publisher: {
+              '@type': 'Organization',
+              name: 'A Teknon Solutions',
+              logo: { '@type': 'ImageObject', url: `${window.location.origin}/og-image.png` },
+            },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': `${window.location.origin}/blog/${slug}` },
+          }}
         />
+      ) : notFound ? (
+        <Seo
+          title="Post not found | A Teknon Solutions"
+          description="This blog post may have been unpublished or the link is incorrect."
+          path={`/blog/${slug}`}
+          noindex
+        />
+      ) : (
+        <Seo title="Loading… | A Teknon Solutions" description="Loading this post." path={`/blog/${slug}`} noindex />
       )}
       <Navbar />
       <main className="pt-40 pb-28">
