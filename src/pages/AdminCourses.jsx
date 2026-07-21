@@ -48,10 +48,14 @@ export default function AdminCourses() {
   }
 
   async function deleteCourse(id) {
-    if (!window.confirm('Delete this course? This cannot be undone.')) return;
+    if (!window.confirm('Delete this course? This cannot be undone. (Blocked if it still has modules — remove those first, or Unpublish instead to just hide it.)')) return;
     setUpdatingId(id);
     const { error } = await supabase.from('courses').delete().eq('id', id);
-    if (!error) setCourses((list) => list.filter((c) => c.id !== id));
+    if (error) {
+      window.alert(`Couldn't delete this course: ${error.message}`);
+    } else {
+      setCourses((list) => list.filter((c) => c.id !== id));
+    }
     setUpdatingId(null);
   }
 

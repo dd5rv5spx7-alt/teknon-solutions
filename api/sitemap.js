@@ -23,18 +23,25 @@ export default async function handler(req, res) {
   const anonKey = process.env.VITE_SUPABASE_ANON_KEY;
   if (supabaseUrl && anonKey) {
     try {
+      // blog_posts has no updated_at column (only created_at/published_at —
+      // see supabase/010_blog.sql) — selecting a column that doesn't exist
+      // makes PostgREST reject the whole query with a 400, which silently
+      // dropped every blog post from this sitemap until this was caught.
       const postsRes = await fetch(
-        `${supabaseUrl}/rest/v1/blog_posts?is_published=eq.true&select=slug,updated_at,published_at`,
+        `${supabaseUrl}/rest/v1/blog_posts?is_published=eq.true&select=slug,published_at`,
         { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } }
       );
       if (postsRes.ok) {
         const posts = await postsRes.json();
         posts.forEach((p) => {
-          const lastmod = (p.updated_at || p.published_at || today).slice(0, 10);
+          const lastmod = (p.published_at || today).slice(0, 10);
           urls.push(
             `  <url>\n    <loc>${SITE_URL}/blog/${encodeURIComponent(p.slug)}</loc>\n    <lastmod>${lastmod}</lastmod>\n    <changefreq>monthly</changefreq>\n    <priority>0.6</priority>\n  </url>`
           );
         });
+      } else {
+        const text = await postsRes.text().catch(() => '');
+        console.error('sitemap: blog_posts query failed', postsRes.status, text.slice(0, 300));
       }
     } catch (err) {
       console.error('sitemap: failed to fetch blog posts', err);

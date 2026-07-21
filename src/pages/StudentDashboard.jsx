@@ -279,7 +279,11 @@ export default function StudentDashboard() {
       {viewingCert && (
         <CertificateModal
           certificate={viewingCert}
-          studentName={profile?.full_name || session?.user?.email}
+          // The name as issued (certificates.student_name), not the
+          // student's current profile name — a certificate is a
+          // proof-of-completion record and shouldn't silently reflect a
+          // name change made after the fact.
+          studentName={viewingCert.student_name || profile?.full_name || session?.user?.email}
           onClose={() => setViewingCert(null)}
         />
       )}

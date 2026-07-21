@@ -4,7 +4,12 @@ import Seo from '../components/Seo.jsx';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.js';
+
+// Verification now goes through /api/verify-certificate (server-side), not
+// the Supabase client directly — so this page no longer needs to import
+// src/lib/supabaseClient.js at all, which otherwise pulls the full
+// @supabase/supabase-js SDK into this route's chunk for no reason.
+const isSupabaseConfigured = Boolean(import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 export default function VerifyCertificate() {
   const [certNumber, setCertNumber] = useState('');
@@ -20,13 +25,27 @@ export default function VerifyCertificate() {
     setError('');
     setResult(undefined);
 
-    const { data, error } = await supabase.rpc('verify_certificate', { cert_number: trimmed });
-    setLoading(false);
-    if (error) {
+    // Routed through a rate-limited API endpoint rather than calling
+    // supabase.rpc() directly from the browser — the RPC itself has no rate
+    // limiting of its own, so a direct call is brute-forceable against
+    // Supabase straight from a script.
+    try {
+      const res = await fetch('/api/verify-certificate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ cert_number: trimmed }),
+      });
+      const body = await res.json();
+      if (!res.ok || !body.ok) {
+        setError(body.error || 'Something went wrong verifying that certificate. Please try again.');
+        setLoading(false);
+        return;
+      }
+      setResult(body.result);
+    } catch {
       setError('Something went wrong verifying that certificate. Please try again.');
-      return;
     }
-    setResult(data && data.length > 0 ? data[0] : null);
+    setLoading(false);
   }
 
   return (

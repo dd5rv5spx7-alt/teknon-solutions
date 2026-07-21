@@ -265,6 +265,7 @@ supabase/
   003_people_admin.sql      ← run this too if you set up Supabase before the People admin module
   004_student_self_service.sql ← run this too if you set up Supabase before the student portal
   012_payments.sql          ← run this too if you set up Supabase before Razorpay payments
+  013_database_hygiene.sql  ← run this too — index/FK cleanup, certificate tamper-fix, email-change guard
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)

@@ -5,7 +5,12 @@ import { supabase } from '../lib/supabaseClient.js';
 
 function generateCertificateNumber() {
   const year = new Date().getFullYear();
-  const rand = Math.floor(Math.random() * 900000 + 100000);
+  // Was Math.floor(Math.random() * 900000 + 100000) — only ~900,000 possible
+  // values per year, generated with a non-cryptographic PRNG, brute-forceable
+  // against the public verification endpoint within a year's keyspace.
+  // crypto.randomUUID() gives a cryptographically random source; 10 hex
+  // chars is 16^10 (~1.1 * 10^12) possible values per year.
+  const rand = crypto.randomUUID().replace(/-/g, '').slice(0, 10).toUpperCase();
   return `TS-${year}-${rand}`;
 }
 
@@ -54,7 +59,7 @@ export default function AdminCertificates() {
       (c) =>
         c.course_title?.toLowerCase().includes(q) ||
         c.certificate_number?.toLowerCase().includes(q) ||
-        c.profiles?.full_name?.toLowerCase().includes(q)
+        c.student_name?.toLowerCase().includes(q)
     );
   }, [certificates, search]);
 
@@ -107,7 +112,7 @@ export default function AdminCertificates() {
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-semibold text-navy dark:text-white truncate">
-                  {c.profiles?.full_name || 'Unknown student'}
+                  {c.student_name || 'Unknown student'}
                 </p>
                 <p className="text-xs text-slatesoft dark:text-white/50 truncate">
                   {c.course_title} · {c.profiles?.email || '—'}
@@ -184,8 +189,14 @@ function IssueCertificateModal({ students, issuerId, onClose, onIssued }) {
     if (!studentId || !courseTitle.trim()) return;
     setSubmitting(true);
     setError('');
+    // Denormalized at issuance time, same treatment already given to
+    // course_title: a certificate is a proof-of-completion record, so its
+    // student_name must stay fixed even if that student later edits their
+    // own profile's full_name.
+    const student = students.find((s) => s.id === studentId);
     const { error } = await supabase.from('certificates').insert({
       student_id: studentId,
+      student_name: student?.full_name || student?.email || 'Unknown',
       course_title: courseTitle.trim(),
       certificate_number: generateCertificateNumber(),
       issued_by: issuerId,

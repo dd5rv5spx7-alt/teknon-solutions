@@ -77,14 +77,22 @@ export default function AdminCourseContent() {
   }
 
   async function deleteModule(id) {
-    if (!window.confirm('Delete this module and all its lessons? This cannot be undone.')) return;
-    await supabase.from('course_modules').delete().eq('id', id);
+    if (!window.confirm('Delete this module? This cannot be undone. (Blocked if it still has lessons — delete those first.)')) return;
+    const { error } = await supabase.from('course_modules').delete().eq('id', id);
+    if (error) {
+      window.alert(`Couldn't delete this module: ${error.message}`);
+      return;
+    }
     fetchContent();
   }
 
   async function deleteLesson(id) {
-    if (!window.confirm('Delete this lesson? This cannot be undone.')) return;
-    await supabase.from('course_lessons').delete().eq('id', id);
+    if (!window.confirm('Delete this lesson? This cannot be undone. (Blocked if any student has recorded progress on it.)')) return;
+    const { error } = await supabase.from('course_lessons').delete().eq('id', id);
+    if (error) {
+      window.alert(`Couldn't delete this lesson: ${error.message}`);
+      return;
+    }
     fetchContent();
   }
 
