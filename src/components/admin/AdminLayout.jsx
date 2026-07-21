@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LogOut, Inbox, Users, BarChart3, BookOpen, Award, Layers, Newspaper, CreditCard, Tag, CalendarDays } from 'lucide-react';
+import { LogOut, Inbox, Users, BarChart3, BookOpen, Award, Layers, Newspaper, CreditCard, Tag, CalendarDays, ClipboardCheck } from 'lucide-react';
 import Logo from '../Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -9,6 +9,7 @@ const ADMIN_NAV = [
   { to: '/admin/people', label: 'People', icon: Users },
   { to: '/admin/courses', label: 'Courses', icon: BookOpen },
   { to: '/admin/batches', label: 'Batches', icon: CalendarDays },
+  { to: '/admin/attendance', label: 'Attendance', icon: ClipboardCheck },
   { to: '/admin/course-content', label: 'Curriculum', icon: Layers },
   { to: '/admin/certificates', label: 'Certificates', icon: Award },
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X } from 'lucide-react';
+import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X, CalendarCheck } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
@@ -22,6 +22,9 @@ export default function StudentDashboard() {
   const [certificates, setCertificates] = useState([]);
   const [loadingCertificates, setLoadingCertificates] = useState(true);
   const [viewingCert, setViewingCert] = useState(null);
+
+  const [attendance, setAttendance] = useState([]);
+  const [loadingAttendance, setLoadingAttendance] = useState(true);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -66,6 +69,16 @@ export default function StudentDashboard() {
         setCertificates(data ?? []);
         setLoadingCertificates(false);
       });
+
+    supabase
+      .from('attendance_records')
+      .select('status, attendance_sessions(session_date, topic, batches(name))')
+      .eq('student_id', session.user.id)
+      .order('session_date', { foreignTable: 'attendance_sessions', ascending: false })
+      .then(({ data }) => {
+        setAttendance(data ?? []);
+        setLoadingAttendance(false);
+      });
   }, [session?.user?.id]);
 
   async function saveProfile(e) {
@@ -100,9 +113,9 @@ export default function StudentDashboard() {
 
       <main className="container-px mx-auto max-w-8xl py-12">
         <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-800 dark:text-amber-200 mb-8">
-          Profile, Courses and Certificates are real below. Assignments, Downloads, Attendance, and
-          Notifications from CLAUDE.md's full spec aren't built yet. Progress <em>is</em> tracked —
-          open a course's Continue Learning link to see per-lesson completion.
+          Profile, Courses, Certificates, and Attendance are real below. Downloads and Notifications
+          from CLAUDE.md's full spec aren't built yet. Progress <em>is</em> tracked — open a
+          course's Continue Learning link to see per-lesson completion.
         </div>
 
         <h1 className="font-display font-bold text-2xl text-navy dark:text-white mb-1">
@@ -206,6 +219,55 @@ export default function StudentDashboard() {
                 </div>
               ))}
             </div>
+          )}
+        </div>
+
+        {/* Attendance */}
+        <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 mb-6">
+          <h2 className="text-sm font-semibold text-navy dark:text-white mb-4 flex items-center gap-2">
+            <CalendarCheck size={15} /> Attendance
+          </h2>
+          {loadingAttendance ? (
+            <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+              <Loader2 size={15} className="animate-spin" /> Loading…
+            </div>
+          ) : attendance.length === 0 ? (
+            <p className="text-sm text-slatesoft dark:text-white/50">
+              No attendance recorded yet — this fills in once you&rsquo;re enrolled in a batch and
+              sessions begin.
+            </p>
+          ) : (
+            <>
+              <p className="text-xs text-slatesoft dark:text-white/50 mb-3">
+                {attendance.filter((a) => a.status === 'present' || a.status === 'late').length}/{attendance.length} sessions
+                attended
+              </p>
+              <div className="space-y-2 max-h-64 overflow-y-auto">
+                {attendance.map((a, i) => (
+                  <div key={i} className="flex items-center justify-between gap-3 text-sm border-b border-navy/5 dark:border-white/5 pb-2 last:border-0">
+                    <div className="min-w-0">
+                      <p className="text-navy dark:text-white truncate">
+                        {a.attendance_sessions?.batches?.name} — {a.attendance_sessions?.topic || 'Session'}
+                      </p>
+                      <p className="text-xs text-slatesoft dark:text-white/40">
+                        {a.attendance_sessions?.session_date && new Date(a.attendance_sessions.session_date).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span
+                      className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold ${
+                        a.status === 'present'
+                          ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                          : a.status === 'late'
+                          ? 'bg-gold/15 text-amber-600 dark:text-gold'
+                          : 'bg-red-500/10 text-red-600 dark:text-red-300'
+                      }`}
+                    >
+                      {a.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </>
           )}
         </div>
 
