@@ -5,6 +5,7 @@ import {
 } from 'recharts';
 import { TrendingUp, Target, GraduationCap, UserCog, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.js';
+import StatCard from '../components/admin/StatCard.jsx';
 
 const STATUS_ORDER = ['new', 'read', 'replied', 'enrolled', 'archived'];
 const STATUS_LABELS = { new: 'New', read: 'Read', replied: 'Replied', enrolled: 'Enrolled', archived: 'Archived' };
@@ -197,18 +198,6 @@ export default function AdminAnalytics() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, sub }) {
-  return (
-    <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-5">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono uppercase tracking-wide text-slatesoft dark:text-white/40">{label}</span>
-        <Icon size={15} className="text-royal dark:text-accent" />
-      </div>
-      <p className="font-display font-extrabold text-2xl text-navy dark:text-white">{value}</p>
-      {sub && <p className="text-[11px] text-slatesoft dark:text-white/40 mt-0.5">{sub}</p>}
-    </div>
-  );
-}
 
 function ChartCard({ title, children, className = '' }) {
   return (

@@ -1,6 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { CreditCard, Loader2, Search, Download, IndianRupee, TrendingUp, Receipt } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.js';
+import StatCard from '../components/admin/StatCard.jsx';
+import { downloadCsv } from '../lib/csv.js';
 
 const TIER_LABELS = {
   starter: 'Starter (2-week)',
@@ -60,21 +62,15 @@ export default function AdminPayments() {
   }, [payments, search]);
 
   function exportCsv() {
-    const headers = ['Name', 'Email', 'Phone', 'Program', 'Amount', 'Status', 'Razorpay Payment ID', 'Date'];
+    // Razorpay Order ID included alongside Payment ID so exported rows can
+    // be cross-referenced against Razorpay's own order records during
+    // bookkeeping — the payment ID alone isn't enough for that lookup.
+    const headers = ['Name', 'Email', 'Phone', 'Program', 'Amount', 'Status', 'Razorpay Payment ID', 'Razorpay Order ID', 'Date'];
     const rows = filtered.map((p) => [
       p.name, p.email, p.phone, TIER_LABELS[p.tier] || p.tier,
-      (p.amount / 100).toFixed(2), p.status, p.razorpay_payment_id ?? '', p.created_at,
+      (p.amount / 100).toFixed(2), p.status, p.razorpay_payment_id ?? '', p.razorpay_order_id ?? '', p.created_at,
     ]);
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `teknon-payments-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`teknon-payments-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   }
 
   return (
@@ -149,14 +145,3 @@ export default function AdminPayments() {
   );
 }
 
-function StatCard({ label, value, icon: Icon }) {
-  return (
-    <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-5">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono uppercase tracking-wide text-slatesoft dark:text-white/40">{label}</span>
-        <Icon size={15} className="text-royal dark:text-accent" />
-      </div>
-      <p className="font-display font-extrabold text-2xl text-navy dark:text-white">{value}</p>
-    </div>
-  );
-}

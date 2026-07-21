@@ -5,6 +5,7 @@
 // an order for less than the real amount.
 
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
+import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -87,10 +88,3 @@ export default async function handler(req, res) {
   });
 }
 
-function safeParse(str) {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return {};
-  }
-}

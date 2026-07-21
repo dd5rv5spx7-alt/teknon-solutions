@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
+import StatCard from '../components/admin/StatCard.jsx';
 
 const ROLE_META = {
   student: { label: 'Student', color: 'bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent' },
@@ -330,17 +331,6 @@ function Field({ label, children }) {
   );
 }
 
-function StatCard({ label, value, icon: Icon, highlight }) {
-  return (
-    <div className={`rounded-2xl border p-5 ${highlight ? 'border-royal/30 bg-royal/5 dark:bg-accent/10' : 'border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04]'}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono uppercase tracking-wide text-slatesoft dark:text-white/40">{label}</span>
-        <Icon size={15} className="text-royal dark:text-accent" />
-      </div>
-      <p className="font-display font-extrabold text-2xl text-navy dark:text-white">{value}</p>
-    </div>
-  );
-}
 
 function ActionBtn({ icon: Icon, label, onClick, disabled, danger }) {
   return (

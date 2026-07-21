@@ -6,6 +6,7 @@
 // exactly what happened rather than silently failing.
 
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
+import { safeParse } from './_lib/http.js';
 import { sendEmail, isEmailConfigured, escapeHtml } from './_lib/email.js';
 import { emailRow, internalEmailHtml, customerEmailHtml, WHATSAPP_HREF, ADMIN_URL, TEAM_EMAIL } from './_lib/emailTemplates.js';
 
@@ -180,10 +181,3 @@ function studentEmailHtml(e) {
   });
 }
 
-function safeParse(str) {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return {};
-  }
-}

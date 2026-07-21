@@ -20,6 +20,7 @@
 
 import crypto from 'node:crypto';
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
+import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
 import { sendEmail, isEmailConfigured } from './_lib/email.js';
 import { TEAM_EMAIL, adminPaymentEmailHtml, studentPaymentEmailHtml } from './_lib/emailTemplates.js';
@@ -182,10 +183,3 @@ export default async function handler(req, res) {
   return res.status(200).json({ ok: true, stored });
 }
 
-function safeParse(str) {
-  try {
-    return JSON.parse(str);
-  } catch {
-    return {};
-  }
-}

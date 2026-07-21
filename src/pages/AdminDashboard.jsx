@@ -4,6 +4,8 @@ import {
   MessageSquare, GraduationCap, Archive, RotateCcw, ChevronDown, ChevronUp,
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.js';
+import StatCard from '../components/admin/StatCard.jsx';
+import { downloadCsv } from '../lib/csv.js';
 
 const STATUS_META = {
   new: { label: 'New', color: 'bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent' },
@@ -88,16 +90,7 @@ export default function AdminDashboard() {
       e.name, e.email, e.phone, e.college ?? '', e.year ?? '', e.program ?? '',
       e.status, (e.message ?? '').replace(/\n/g, ' '), e.source_page ?? '', e.created_at,
     ]);
-    const csv = [headers, ...rows]
-      .map((row) => row.map((cell) => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `teknon-enquiries-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadCsv(`teknon-enquiries-${new Date().toISOString().slice(0, 10)}.csv`, headers, rows);
   }
 
   return (
@@ -244,17 +237,6 @@ export default function AdminDashboard() {
   );
 }
 
-function StatCard({ label, value, icon: Icon, highlight }) {
-  return (
-    <div className={`rounded-2xl border p-5 ${highlight ? 'border-royal/30 bg-royal/5 dark:bg-accent/10' : 'border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04]'}`}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono uppercase tracking-wide text-slatesoft dark:text-white/40">{label}</span>
-        <Icon size={15} className="text-royal dark:text-accent" />
-      </div>
-      <p className="font-display font-extrabold text-2xl text-navy dark:text-white">{value}</p>
-    </div>
-  );
-}
 
 function DetailRow({ label, value }) {
   return (
