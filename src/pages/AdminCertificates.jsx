@@ -133,6 +133,7 @@ export default function AdminCertificates() {
         <IssueCertificateModal
           students={students}
           issuerId={session?.user?.id}
+          accessToken={session?.access_token}
           onClose={() => setShowIssue(false)}
           onIssued={() => {
             setShowIssue(false);
@@ -144,7 +145,7 @@ export default function AdminCertificates() {
   );
 }
 
-function IssueCertificateModal({ students, issuerId, onClose, onIssued }) {
+function IssueCertificateModal({ students, issuerId, accessToken, onClose, onIssued }) {
   const [studentId, setStudentId] = useState('');
   const [courseTitle, setCourseTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -194,16 +195,37 @@ function IssueCertificateModal({ students, issuerId, onClose, onIssued }) {
     // student_name must stay fixed even if that student later edits their
     // own profile's full_name.
     const student = students.find((s) => s.id === studentId);
+    const studentName = student?.full_name || student?.email || 'Unknown';
+    const certificateNumber = generateCertificateNumber();
     const { error } = await supabase.from('certificates').insert({
       student_id: studentId,
-      student_name: student?.full_name || student?.email || 'Unknown',
+      student_name: studentName,
       course_title: courseTitle.trim(),
-      certificate_number: generateCertificateNumber(),
+      certificate_number: certificateNumber,
       issued_by: issuerId,
     });
     setSubmitting(false);
-    if (error) setError(error.message);
-    else onIssued();
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    onIssued();
+    // Best-effort, fire-and-forget: a failed notification email shouldn't
+    // block the certificate from being issued — it's already saved. RLS
+    // already protected the insert above; this call just sends the email a
+    // browser can't safely send itself (no SMTP credentials client-side).
+    if (student?.email) {
+      fetch('/api/admin/send-certificate-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({
+          email: student.email,
+          student_name: studentName,
+          course_title: courseTitle.trim(),
+          certificate_number: certificateNumber,
+        }),
+      }).catch((err) => console.error('Could not send certificate-ready email', err));
+    }
   };
 
   return (

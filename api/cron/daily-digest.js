@@ -9,7 +9,7 @@
 // what keeps this endpoint from being triggered by anyone who finds the URL.
 
 import { sendEmail, isEmailConfigured } from '../_lib/email.js';
-import { emailRow, internalEmailHtml, ADMIN_URL, rupees, TEAM_EMAIL } from '../_lib/emailTemplates.js';
+import { emailRow, internalEmailHtml, customerEmailHtml, ADMIN_URL, WHATSAPP_HREF, rupees, TEAM_EMAIL } from '../_lib/emailTemplates.js';
 import { TIER_PRICES } from '../_lib/pricing.js';
 
 export default async function handler(req, res) {
@@ -44,6 +44,8 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, skipped: 'Email not configured' });
   }
 
+  const nudged = await sendAbandonedCheckoutNudges(supabaseUrl, serviceKey);
+
   const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
   const [enquiries, payments] = await Promise.all([
@@ -54,7 +56,7 @@ export default async function handler(req, res) {
   if (enquiries.length === 0 && payments.length === 0) {
     // Nothing happened in the last 24h — skip sending an empty digest so the
     // team's inbox isn't full of "0 enquiries, 0 payments" noise every morning.
-    return res.status(200).json({ ok: true, skipped: 'nothing to report' });
+    return res.status(200).json({ ok: true, skipped: 'nothing to report', nudged });
   }
 
   const paid = payments.filter((p) => p.status === 'paid');
@@ -90,7 +92,67 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: 'Digest email failed to send' });
   }
 
-  return res.status(200).json({ ok: true, enquiries: enquiries.length, payments: paid.length });
+  return res.status(200).json({ ok: true, enquiries: enquiries.length, payments: paid.length, nudged });
+}
+
+// A customer who fills the checkout form and starts a Razorpay order but
+// never completes it (closes the tab, changes their mind mid-payment) used
+// to leave zero trace — no lead, no follow-up. Their order sits as
+// status='created' (see supabase/015_payment_lifecycle.sql), so once it's
+// been stale for a couple of hours (long enough that it's genuinely
+// abandoned, not just mid-payment) and hasn't been nudged before, send one
+// "finish enrolling" email. Never nudges the same abandoned checkout twice,
+// and gives up on anything older than a week (too stale to be worth
+// re-engaging automatically).
+async function sendAbandonedCheckoutNudges(supabaseUrl, serviceKey) {
+  const olderThan = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
+  const newerThan = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+  const abandoned = await fetchRows(
+    supabaseUrl,
+    serviceKey,
+    `payments?status=eq.created&nudge_sent_at=is.null&created_at=lt.${olderThan}&created_at=gt.${newerThan}&select=id,name,email,tier&limit=50`
+  );
+
+  let nudged = 0;
+  for (const p of abandoned) {
+    const tierInfo = TIER_PRICES[p.tier];
+    if (!tierInfo || !p.email) continue;
+    try {
+      await sendEmail({
+        to: p.email,
+        bcc: TEAM_EMAIL,
+        subject: 'Still want to enroll? Your spot is waiting — A Teknon Solutions',
+        html: customerEmailHtml({
+          greetingName: p.name || 'there',
+          whatsappHref: WHATSAPP_HREF,
+          bodyHtml: `
+              <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
+                Looks like you started enrolling in the <b style="color:#0B1F4D;">${tierInfo.label}</b>
+                program but didn&rsquo;t finish checkout. No charge was made — your spot isn&rsquo;t
+                held, so if you&rsquo;d still like to join, head back and complete payment when
+                you&rsquo;re ready.
+              </p>
+              <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
+                Questions before you enroll? Just reply to this email or message us on WhatsApp.
+              </p>`,
+        }),
+      });
+      await fetch(`${supabaseUrl}/rest/v1/payments?id=eq.${p.id}`, {
+        method: 'PATCH',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=minimal',
+        },
+        body: JSON.stringify({ nudge_sent_at: new Date().toISOString() }),
+      });
+      nudged += 1;
+    } catch (err) {
+      console.error('daily-digest: abandoned-checkout nudge failed for', p.id, err);
+    }
+  }
+  return nudged;
 }
 
 async function cleanupRateLimitCounters(supabaseUrl, serviceKey) {
