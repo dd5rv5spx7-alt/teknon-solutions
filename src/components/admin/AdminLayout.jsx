@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { LogOut, Inbox, Users, BarChart3, BookOpen, Award, Layers, Newspaper, CreditCard, Tag, CalendarDays, ClipboardCheck, FileCheck2 } from 'lucide-react';
+import { LogOut, Inbox, Users, BarChart3, BookOpen, Award, Layers, Newspaper, CreditCard, Tag, CalendarDays, ClipboardCheck, FileCheck2, LayoutTemplate } from 'lucide-react';
 import Logo from '../Logo.jsx';
 import { useAuth } from '../../context/AuthContext.jsx';
 
@@ -16,6 +16,7 @@ const ADMIN_NAV = [
   { to: '/admin/payments', label: 'Payments', icon: CreditCard },
   { to: '/admin/coupons', label: 'Coupons', icon: Tag },
   { to: '/admin/blog', label: 'Blog', icon: Newspaper },
+  { to: '/admin/content', label: 'Site Content', icon: LayoutTemplate },
   { to: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
 ];
 

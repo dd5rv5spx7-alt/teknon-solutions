@@ -275,6 +275,34 @@ checkout with a clear error, not silently ignored.
 
 ---
 
+## 4.10. Batches, Attendance, Assignments & Site Content
+
+Four modules named in CLAUDE.md's original spec, all real now:
+
+- **Batches** (Admin → Batches) — schedule a cohort against a course (start/end date, online/
+  offline/hybrid, capacity) and enroll students into it. `batch_availability()` is a
+  SECURITY DEFINER function (not a plain view — see the comment in `supabase/018_batches.sql` for
+  why) that lets the public marketing site eventually show real seat counts without ever exposing
+  who's enrolled.
+- **Attendance** (Admin → Attendance) — pick a batch, create a session, mark each enrolled student
+  present/late/absent. Both admins and faculty can mark attendance (a deliberate exception to this
+  project's usual admin-only write pattern — faculty are the ones actually running the session).
+  Students see their own attendance history on their dashboard.
+- **Assignments** (Admin → Assignments) — post an assignment against a course with a due date and
+  max score; students submit text and/or a link from their dashboard and can resubmit until graded.
+  Grading (grade/feedback/status) is staff-only, enforced by a database trigger
+  (`prevent_self_grading` in `supabase/020_assignments.sql`) so a student can't set their own grade
+  even via a raw API call, not just because the UI doesn't offer the field.
+- **Site Content** (Admin → Site Content) — a scoped CMS: edit the FAQ and Testimonials sections as
+  JSON, live, without a code change or redeploy. Deliberately narrow — a full page-builder was out
+  of scope, and **Pricing is intentionally not editable here**: its tier keys/amounts must stay in
+  lockstep with `api/_lib/pricing.js`'s server-side source of truth, so it stays code-only on
+  purpose. If no override is saved for a section, the page falls back to the built-in default in
+  `src/data/siteData.js` — the marketing site never breaks or shows empty content because of a
+  missing CMS row.
+
+---
+
 ## 5. Project structure
 
 ```
@@ -300,6 +328,10 @@ supabase/
   015_payment_lifecycle.sql ← run this too — created/failed/refund payment states, refund tracking columns
   016_abandoned_checkout.sql ← run this too — tracks whether an abandoned-checkout nudge was sent
   017_coupons.sql            ← run this too — coupons table + discount tracking on payments
+  018_batches.sql            ← run this too — batch/cohort calendar + seat availability
+  019_attendance.sql         ← run this too — attendance sessions + records (admin/faculty write)
+  020_assignments.sql        ← run this too — assignments + submissions, staff-only grading guard
+  021_cms.sql                ← run this too — site_content table (FAQ & Testimonials, admin-editable)
 src/
   data/siteData.js       ← almost all editable content lives here
   components/            ← one file per section (Hero, Programs, Pricing, etc.)
@@ -316,14 +348,14 @@ tailwind.config.js         ← brand colors/fonts (navy, royal blue, accent blue
 
 ## 6. What wasn't included (happy to build next)
 
-Enquiries, People, Analytics, and a real Student portal (`/student/login` → `/student`) are all
-real now. What a student actually gets today: their own profile (editable name/phone), and their
-own enquiry history matched by email — not Courses, Progress, Assignments, Certificates,
-Downloads, or Attendance, because none of that data exists anywhere in the system yet. Building
-empty tabs for those would look done without being done, so they're not there. Next up: bulk-
-importing student accounts from a list of emails, WhatsApp automation via Meta's Cloud API (queued
-on your business verification), Courses admin, a CMS for editing site content without code,
-Certificates, Assignments, a blog section, a careers page, and an events page.
+As of this update: Enquiries, People, Courses, Batches, Attendance, Assignments, Certificates,
+Coupons, Payments (with refunds), Site Content (CMS, scoped to FAQ & Testimonials), Analytics, and
+the Student portal (`/student/login` → `/student`, with profile, courses, assignments, attendance,
+and certificates) are all real. Still not built: bulk-importing student accounts from a list of
+emails, WhatsApp automation via Meta's Cloud API (queued on your business verification), Downloads
+(a resource library), in-app Notifications, a general admin Settings page, a careers page, and an
+events page. GST-compliant invoicing and automated test coverage are also still open — see the
+engineering-audit artifact from your last session for the full prioritized list if you want it.
 
 ## 7. Performance note
 

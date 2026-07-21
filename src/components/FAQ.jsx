@@ -2,7 +2,15 @@ import React, { useState } from 'react';
 import { Plus } from 'lucide-react';
 import SectionHeading from './SectionHeading.jsx';
 import useInView from '../hooks/useInView.js';
+import useSiteContent from '../hooks/useSiteContent.js';
 import { FAQS } from '../data/siteData.js';
+
+// Note: index.html's FAQPage JSON-LD is generated at *build* time from
+// FAQS (see scripts/sync-faq-jsonld.mjs) — a CMS override applied here at
+// runtime via Admin → CMS won't be reflected there until the site is
+// rebuilt/redeployed with the updated FAQS. Acceptable for now (structured
+// data lagging a same-day content edit by one deploy cycle is low-stakes),
+// but worth knowing if this ever needs tighter sync.
 
 function FAQItem({ item, isOpen, onToggle, isInView, delay, itemId }) {
   const panelId = `faq-panel-${itemId}`;
@@ -48,6 +56,7 @@ function FAQItem({ item, isOpen, onToggle, isInView, delay, itemId }) {
 export default function FAQ() {
   const [openIndex, setOpenIndex] = useState(0);
   const [ref, isInView] = useInView();
+  const faqs = useSiteContent('faq', FAQS);
 
   return (
     <section className="py-28 sm:py-32 bg-white dark:bg-navy">
@@ -61,7 +70,7 @@ export default function FAQ() {
           />
 
           <div ref={ref}>
-            {FAQS.map((item, i) => (
+            {faqs.map((item, i) => (
               <FAQItem
                 key={item.q}
                 item={item}

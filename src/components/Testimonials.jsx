@@ -1,14 +1,16 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { ChevronLeft, ChevronRight, Quote, Star } from 'lucide-react';
 import SectionHeading from './SectionHeading.jsx';
+import useSiteContent from '../hooks/useSiteContent.js';
 import { TESTIMONIALS } from '../data/siteData.js';
 
 export default function Testimonials() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const testimonials = useSiteContent('testimonials', TESTIMONIALS);
 
-  const next = useCallback(() => setIndex((i) => (i + 1) % TESTIMONIALS.length), []);
-  const prev = useCallback(() => setIndex((i) => (i - 1 + TESTIMONIALS.length) % TESTIMONIALS.length), []);
+  const next = useCallback(() => setIndex((i) => (i + 1) % testimonials.length), [testimonials.length]);
+  const prev = useCallback(() => setIndex((i) => (i - 1 + testimonials.length) % testimonials.length), [testimonials.length]);
 
   useEffect(() => {
     if (paused) return undefined;
@@ -16,7 +18,9 @@ export default function Testimonials() {
     return () => clearInterval(t);
   }, [paused, next]);
 
-  const active = TESTIMONIALS[index];
+  // A CMS edit can change the list length while `index` from a previous
+  // render is still in flight — clamp rather than risk reading past the end.
+  const active = testimonials[index % testimonials.length];
 
   return (
     <section className="py-28 sm:py-32 bg-grad-navy relative overflow-hidden">
@@ -70,11 +74,11 @@ export default function Testimonials() {
               <div className="h-1 w-full rounded-full bg-white/15 overflow-hidden">
                 <div
                   className="h-full bg-accent rounded-full transition-all duration-500"
-                  style={{ width: `${((index + 1) / TESTIMONIALS.length) * 100}%` }}
+                  style={{ width: `${((index + 1) / testimonials.length) * 100}%` }}
                 />
               </div>
               <span className="font-mono text-[11px] text-white/45 tracking-wide">
-                {String(index + 1).padStart(2, '0')} / {String(TESTIMONIALS.length).padStart(2, '0')}
+                {String(index + 1).padStart(2, '0')} / {String(testimonials.length).padStart(2, '0')}
               </span>
             </div>
 

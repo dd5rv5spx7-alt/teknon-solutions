@@ -98,9 +98,9 @@ export default function AdminDashboard() {
       <h1 className="font-display font-bold text-2xl text-navy dark:text-white mb-5">Enquiries</h1>
 
       <div className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 text-sm text-amber-800 dark:text-amber-200 mb-8">
-        Enquiries, People, Courses, Batches, Attendance, Assignments, Certificates, Coupons, and
-        Payments are built — CMS (editing the marketing site's own content) from CLAUDE.md's full
-        spec isn't here yet.
+        Enquiries, People, Courses, Batches, Attendance, Assignments, Certificates, Coupons,
+        Payments, and Site Content (CMS, scoped to FAQ &amp; Testimonials for now) are all built —
+        a general Settings page from CLAUDE.md's full spec isn't here yet.
       </div>
 
       {/* Stat cards */}
