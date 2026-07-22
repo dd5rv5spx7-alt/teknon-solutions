@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Instagram, Linkedin, Github, Facebook, Youtube, Phone, MapPin, Mail, Send } from 'lucide-react';
+import { Phone, MapPin, Mail, Send } from 'lucide-react';
+import { Instagram, Linkedin, Github, Facebook, Youtube } from './icons/BrandIcons.jsx';
 import Logo from './Logo.jsx';
 import { FOOTER_LINKS, SOCIAL_LINKS, CONTACT } from '../data/siteData.js';
 
@@ -90,7 +91,7 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
-                  className="min-w-0 flex-1 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/15 text-white text-sm placeholder:text-white/30 focus:outline-none focus:border-accent/50"
+                  className="min-w-0 flex-1 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/15 text-white text-sm placeholder:text-white/30 focus:outline-hidden focus:border-accent/50"
                 />
                 <button
                   type="submit"

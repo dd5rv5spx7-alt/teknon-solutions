@@ -1,6 +1,57 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+/* Theme toggles a .dark class on <html> (see ThemeContext) rather than
+   following the OS's prefers-color-scheme, so the default v4 dark variant
+   has to be repointed at that class. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-navy: #0B1F4D;
+  --color-navy-deep: #071633;
+  --color-navy-light: #13285E;
+  --color-royal: #1E5EFF;
+  --color-accent: #2F80ED;
+  --color-mist: #F8FAFC;
+  --color-slatesoft: #5B6B8C;
+  --color-gold: #FBBF24;
+
+  --font-display: Manrope, sans-serif;
+  --font-sans: Inter, sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  --shadow-soft: 0 4px 24px -4px rgba(11, 31, 77, 0.10);
+  --shadow-card: 0 8px 30px -8px rgba(11, 31, 77, 0.16);
+  --shadow-card-lg: 0 20px 50px -12px rgba(11, 31, 77, 0.25);
+  --shadow-glow-lg: 0 8px 30px -6px rgba(30, 94, 255, 0.45);
+
+  --container-8xl: 1440px;
+
+  /* Keys match the original tailwind.config.js animation names exactly
+     (including floatSlow's camelCase) — className="animate-floatSlow" is
+     already written throughout src/, and a kebab-case rename here would
+     silently break it since Tailwind derives the utility name from the key. */
+  --animate-float: float 6s ease-in-out infinite;
+  --animate-floatSlow: floatSlow 8s ease-in-out infinite;
+  --animate-blink: blink 1s step-start infinite;
+  --animate-marquee: marquee 28s linear infinite;
+
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-14px); }
+  }
+  @keyframes floatSlow {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-10px) rotate(3deg); }
+  }
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+  @keyframes marquee {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+}
 
 @layer base {
   html {

@@ -89,7 +89,7 @@ export default function AdminCoupons() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search code…"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-none focus:border-royal/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50"
           />
         </div>
         {isAdmin && (

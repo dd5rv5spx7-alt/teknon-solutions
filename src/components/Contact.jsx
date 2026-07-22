@@ -191,7 +191,7 @@ export default function Contact() {
                     value={form.name}
                     onChange={handleChange}
                     placeholder="Your name"
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-none focus:border-royal/50 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
                   />
                 </div>
                 <div className="sm:col-span-1">
@@ -207,7 +207,7 @@ export default function Contact() {
                     value={form.phone}
                     onChange={handleChange}
                     placeholder="+91 00000 00000"
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-none focus:border-royal/50 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
                   />
                 </div>
                 <div className="sm:col-span-2">
@@ -223,7 +223,7 @@ export default function Contact() {
                     value={form.email}
                     onChange={handleChange}
                     placeholder="you@example.com"
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-none focus:border-royal/50 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
                   />
                 </div>
                 <div className="sm:col-span-1">
@@ -238,7 +238,7 @@ export default function Contact() {
                     value={form.college}
                     onChange={handleChange}
                     placeholder="Your college or company"
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-none focus:border-royal/50 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
                   />
                 </div>
                 <div className="sm:col-span-1">
@@ -250,7 +250,7 @@ export default function Contact() {
                     name="year"
                     value={form.year}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:outline-none focus:border-royal/50 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
                   >
                     <option value="">Select</option>
                     <option value="1st Year">1st Year</option>
@@ -270,7 +270,7 @@ export default function Contact() {
                     name="program"
                     value={form.program}
                     onChange={handleChange}
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:outline-none focus:border-royal/50 transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
                   >
                     <option value="">Select a program</option>
                     {PROGRAMS.map((p) => (
@@ -289,7 +289,7 @@ export default function Contact() {
                     value={form.message}
                     onChange={handleChange}
                     placeholder="Tell us what you're hoping to learn..."
-                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-none focus:border-royal/50 transition-colors resize-none"
+                    className="w-full px-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-hidden focus:border-royal/50 transition-colors resize-none"
                   />
                 </div>
 

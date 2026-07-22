@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 
 // Shared by AdminLogin, StudentLogin, and ResetPassword (twice) — a masked
-// input with a show/hide toggle. No focus:outline-none here on purpose: the
+// input with a show/hide toggle. No focus:outline-hidden here on purpose: the
 // project's global input:focus-visible ring (src/index.css) needs to win.
 export default function PasswordField({ id, value, onChange, placeholder, autoComplete, disabled }) {
   const [visible, setVisible] = useState(false);
