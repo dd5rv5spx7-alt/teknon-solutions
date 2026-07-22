@@ -113,11 +113,19 @@ export default function ResetPassword() {
                 <PasswordField
                   id="new-password"
                   autoComplete="new-password"
+                  minLength={8}
+                  aria-describedby="new-password-hint"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    if (error) setError('');
+                  }}
                   disabled={submitting}
                   placeholder="••••••••"
                 />
+                <p id="new-password-hint" className="mt-1.5 text-xs text-white/45">
+                  At least 8 characters.
+                </p>
               </div>
               <div>
                 <label htmlFor="confirm-password" className="block text-sm font-medium text-white/80 mb-1.5">
@@ -127,7 +135,10 @@ export default function ResetPassword() {
                   id="confirm-password"
                   autoComplete="new-password"
                   value={confirm}
-                  onChange={(e) => setConfirm(e.target.value)}
+                  onChange={(e) => {
+                    setConfirm(e.target.value);
+                    if (error) setError('');
+                  }}
                   disabled={submitting}
                   placeholder="••••••••"
                 />

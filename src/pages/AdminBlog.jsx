@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Newspaper, Plus, X, Loader2, Search, Pencil, Trash2, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
+import useFocusTrap from '../components/admin/useFocusTrap.js';
 
 const EMPTY_FORM = {
   title: '', slug: '', excerpt: '', content: '', featured_image: '',
@@ -89,6 +90,7 @@ export default function AdminBlog() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search title, category…"
+            aria-label="Search posts"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50"
           />
         </div>
@@ -167,40 +169,7 @@ function PostModal({ post, onClose, onSaved }) {
   const [slugTouched, setSlugTouched] = useState(!isNew);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
-
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll(
-      'input, select, textarea, button, [href], [tabindex]:not([tabindex="-1"])'
-    );
-    focusable[0]?.focus();
-
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (e.key === 'Tab' && focusable.length > 0) {
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused.current?.focus?.();
-    };
-  }, [onClose]);
+  const dialogRef = useFocusTrap(onClose);
 
   function handleTitleChange(value) {
     setForm((f) => ({ ...f, title: value, slug: slugTouched ? f.slug : slugify(value) }));
@@ -319,11 +288,20 @@ function PostModal({ post, onClose, onSaved }) {
   );
 }
 
+// The label previously sat as a plain sibling of the control with no
+// htmlFor/id or nesting — visually a label, but with no programmatic
+// association a screen reader could use to announce it. Cloning the id onto
+// the single input/select/textarea child (when there is one) restores that
+// without touching every call site.
 function Field({ label, children }) {
+  const id = React.useId();
+  const associable = React.isValidElement(children) && ['input', 'select', 'textarea'].includes(children.type);
   return (
     <div>
-      <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">{label}</label>
-      {children}
+      <label htmlFor={associable ? id : undefined} className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+        {label}
+      </label>
+      {associable ? React.cloneElement(children, { id }) : children}
     </div>
   );
 }

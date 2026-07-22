@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Layers, Plus, X, Loader2, Pencil, Trash2, PlayCircle, FileText } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
+import useFocusTrap from '../components/admin/useFocusTrap.js';
 
 export default function AdminCourseContent() {
   const { role: myRole } = useAuth();
@@ -111,8 +112,9 @@ export default function AdminCourseContent() {
       )}
 
       <div className="mb-6">
-        <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Course</label>
+        <label htmlFor="curriculum-course" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Course</label>
         <select
+          id="curriculum-course"
           value={courseId}
           onChange={(e) => setCourseId(e.target.value)}
           className="modal-input max-w-md"
@@ -227,45 +229,6 @@ export default function AdminCourseContent() {
   );
 }
 
-function useFocusTrap(onClose) {
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
-
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll(
-      'input, select, textarea, button, [href], [tabindex]:not([tabindex="-1"])'
-    );
-    focusable[0]?.focus();
-
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (e.key === 'Tab' && focusable.length > 0) {
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused.current?.focus?.();
-    };
-  }, [onClose]);
-
-  return dialogRef;
-}
-
 function ModuleModal({ courseId, module: mod, onClose, onSaved }) {
   const isNew = !mod.id;
   const [title, setTitle] = useState(mod.title || '');
@@ -307,12 +270,12 @@ function ModuleModal({ courseId, module: mod, onClose, onSaved }) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Module title</label>
-            <input type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="modal-input" placeholder="Getting Started" />
+            <label htmlFor="module-title" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Module title</label>
+            <input id="module-title" type="text" required value={title} onChange={(e) => setTitle(e.target.value)} className="modal-input" placeholder="Getting Started" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Order (lower shows first)</label>
-            <input type="number" value={position} onChange={(e) => setPosition(e.target.value)} className="modal-input" />
+            <label htmlFor="module-position" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Order (lower shows first)</label>
+            <input id="module-position" type="number" value={position} onChange={(e) => setPosition(e.target.value)} className="modal-input" />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button type="submit" disabled={submitting} className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all disabled:opacity-60">
@@ -377,24 +340,24 @@ function LessonModal({ moduleId, lesson, onClose, onSaved }) {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Lesson title</label>
-            <input type="text" required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="modal-input" placeholder="Setting up your environment" />
+            <label htmlFor="lesson-title" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Lesson title</label>
+            <input id="lesson-title" type="text" required value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} className="modal-input" placeholder="Setting up your environment" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Notes / content</label>
-            <textarea rows={4} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} className="modal-input resize-none" placeholder="What this lesson covers…" />
+            <label htmlFor="lesson-content" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Notes / content</label>
+            <textarea id="lesson-content" rows={4} value={form.content} onChange={(e) => setForm((f) => ({ ...f, content: e.target.value }))} className="modal-input resize-none" placeholder="What this lesson covers…" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Video URL (optional)</label>
-            <input type="url" value={form.video_url} onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))} className="modal-input" placeholder="https://youtube.com/embed/…" />
+            <label htmlFor="lesson-video-url" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Video URL (optional)</label>
+            <input id="lesson-video-url" type="url" value={form.video_url} onChange={(e) => setForm((f) => ({ ...f, video_url: e.target.value }))} className="modal-input" placeholder="https://youtube.com/embed/…" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Resource / download URL (optional)</label>
-            <input type="url" value={form.resource_url} onChange={(e) => setForm((f) => ({ ...f, resource_url: e.target.value }))} className="modal-input" placeholder="https://…" />
+            <label htmlFor="lesson-resource-url" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Resource / download URL (optional)</label>
+            <input id="lesson-resource-url" type="url" value={form.resource_url} onChange={(e) => setForm((f) => ({ ...f, resource_url: e.target.value }))} className="modal-input" placeholder="https://…" />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Order (lower shows first)</label>
-            <input type="number" value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))} className="modal-input" />
+            <label htmlFor="lesson-position" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Order (lower shows first)</label>
+            <input id="lesson-position" type="number" value={form.position} onChange={(e) => setForm((f) => ({ ...f, position: e.target.value }))} className="modal-input" />
           </div>
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button type="submit" disabled={submitting} className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all disabled:opacity-60">

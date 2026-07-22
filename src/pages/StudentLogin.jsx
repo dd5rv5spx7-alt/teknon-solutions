@@ -95,7 +95,10 @@ export default function StudentLogin() {
                 autoFocus
                 autoComplete="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError('');
+                }}
                 disabled={!isSupabaseConfigured || submitting}
                 className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder:text-white/60 text-sm focus:border-accent/50 disabled:opacity-50"
                 placeholder="you@example.com"
@@ -109,7 +112,10 @@ export default function StudentLogin() {
                 id="student-password"
                 autoComplete="current-password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (error) setError('');
+                }}
                 disabled={!isSupabaseConfigured || submitting}
                 placeholder="••••••••"
               />

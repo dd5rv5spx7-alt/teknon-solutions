@@ -40,6 +40,7 @@ export default function AdminCMS() {
           <button
             key={s.key}
             onClick={() => setActiveKey(s.key)}
+            aria-pressed={activeKey === s.key}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-colors ${
               activeKey === s.key
                 ? 'bg-royal text-white'

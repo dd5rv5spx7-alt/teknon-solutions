@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, Plus, X, Loader2, Search, Pencil, Trash2, Users, UserPlus, UserMinus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
+import useFocusTrap from '../components/admin/useFocusTrap.js';
 
 const MODE_LABELS = { online: 'Online', offline: 'Offline', hybrid: 'Hybrid' };
 const EMPTY_FORM = { course_id: '', name: '', start_date: '', end_date: '', mode: 'online', capacity: '' };
@@ -84,6 +85,7 @@ export default function AdminBatches() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search batch name, course…"
+            aria-label="Search batches"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50"
           />
         </div>
@@ -178,22 +180,7 @@ function BatchModal({ batch, courses, onClose, onSaved }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
-
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll('input, select, button, [href], [tabindex]:not([tabindex="-1"])');
-    focusable[0]?.focus();
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused.current?.focus?.();
-    };
-  }, [onClose]);
+  const dialogRef = useFocusTrap(onClose);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -321,22 +308,7 @@ function EnrollmentModal({ batch, onClose }) {
   const [addingId, setAddingId] = useState('');
   const [busyId, setBusyId] = useState(null);
   const [error, setError] = useState('');
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
-
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll('input, select, button, [href], [tabindex]:not([tabindex="-1"])');
-    focusable[0]?.focus();
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused.current?.focus?.();
-    };
-  }, [onClose]);
+  const dialogRef = useFocusTrap(onClose);
 
   useEffect(() => {
     fetchAll();
@@ -409,7 +381,7 @@ function EnrollmentModal({ batch, onClose }) {
         ) : (
           <>
             <div className="flex gap-2 mb-4">
-              <select value={addingId} onChange={(e) => setAddingId(e.target.value)} className="modal-input flex-1">
+              <select value={addingId} onChange={(e) => setAddingId(e.target.value)} aria-label="Student to enroll" className="modal-input flex-1">
                 <option value="">Select a student to enroll…</option>
                 {available.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -443,6 +415,7 @@ function EnrollmentModal({ batch, onClose }) {
                       onClick={() => removeStudent(e.id)}
                       disabled={busyId === e.id}
                       title="Remove from batch"
+                      aria-label={`Remove ${e.profiles?.full_name || e.profiles?.email || 'student'} from batch`}
                       className="text-slatesoft dark:text-white/40 hover:text-red-500 transition-colors disabled:opacity-50"
                     >
                       <UserMinus size={15} />
@@ -458,11 +431,20 @@ function EnrollmentModal({ batch, onClose }) {
   );
 }
 
+// The label previously sat as a plain sibling of the control with no
+// htmlFor/id or nesting — visually a label, but with no programmatic
+// association a screen reader could use to announce it. Cloning the id onto
+// the single input/select/textarea child (when there is one) restores that
+// without touching every call site.
 function Field({ label, children }) {
+  const id = React.useId();
+  const associable = React.isValidElement(children) && ['input', 'select', 'textarea'].includes(children.type);
   return (
     <div>
-      <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">{label}</label>
-      {children}
+      <label htmlFor={associable ? id : undefined} className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+        {label}
+      </label>
+      {associable ? React.cloneElement(children, { id }) : children}
     </div>
   );
 }

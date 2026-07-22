@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import {
   ArrowLeft, CheckCircle2, Circle, ChevronLeft, ChevronRight,
@@ -26,11 +26,23 @@ export default function StudentLearn() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [marking, setMarking] = useState(false);
+  const [markError, setMarkError] = useState('');
+
+  const headingRef = useRef(null);
 
   useEffect(() => {
     if (!courseId || !session?.user?.id) return;
     fetchAll();
   }, [courseId, session?.user?.id]);
+
+  // SPA nav from the dashboard (or a direct link) into this route never
+  // moves focus on its own — send it to the course heading once content
+  // actually exists, same as a full-page navigation would.
+  useEffect(() => {
+    if (!loading && course) {
+      headingRef.current?.focus();
+    }
+  }, [loading, course]);
 
   async function fetchAll() {
     setLoading(true);
@@ -90,9 +102,14 @@ export default function StudentLearn() {
   const selectedIndex = useMemo(() => lessons.findIndex((l) => l.id === selectedLessonId), [lessons, selectedLessonId]);
   const progressPct = lessons.length > 0 ? Math.round((completedIds.size / lessons.length) * 100) : 0;
 
+  useEffect(() => {
+    setMarkError('');
+  }, [selectedLessonId]);
+
   async function markComplete() {
     if (!selectedLesson || completedIds.has(selectedLesson.id)) return;
     setMarking(true);
+    setMarkError('');
     const { error } = await supabase.from('lesson_progress').insert({
       student_id: session.user.id,
       lesson_id: selectedLesson.id,
@@ -100,6 +117,8 @@ export default function StudentLearn() {
     setMarking(false);
     if (!error) {
       setCompletedIds((prev) => new Set(prev).add(selectedLesson.id));
+    } else {
+      setMarkError('Could not mark this lesson complete. Please try again.');
     }
   }
 
@@ -157,7 +176,13 @@ export default function StudentLearn() {
       <div className="container-px mx-auto max-w-8xl py-8 grid lg:grid-cols-[300px_1fr] gap-6">
         {/* Curriculum sidebar */}
         <aside className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-4 h-fit lg:sticky lg:top-24">
-          <h1 className="font-display font-bold text-base text-navy dark:text-white px-2 mb-3">{course.title}</h1>
+          <h1
+            ref={headingRef}
+            tabIndex={-1}
+            className="font-display font-bold text-base text-navy dark:text-white px-2 mb-3 focus:outline-none"
+          >
+            {course.title}
+          </h1>
           {lessons.length === 0 && (
             <p className="text-sm text-slatesoft dark:text-white/50 px-2">No lessons published yet.</p>
           )}
@@ -264,14 +289,21 @@ export default function StudentLearn() {
                     Next <ChevronRight size={15} />
                   </button>
                 </div>
-                <button
-                  onClick={markComplete}
-                  disabled={marking || completedIds.has(selectedLesson.id)}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-60"
-                >
-                  <CheckCircle2 size={15} />
-                  {completedIds.has(selectedLesson.id) ? 'Completed' : marking ? 'Marking…' : 'Mark Complete'}
-                </button>
+                <div className="flex flex-col items-end gap-1.5">
+                  <button
+                    onClick={markComplete}
+                    disabled={marking || completedIds.has(selectedLesson.id)}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-grad-primary text-white text-sm font-semibold hover:brightness-110 transition-all disabled:opacity-60"
+                  >
+                    <CheckCircle2 size={15} />
+                    {completedIds.has(selectedLesson.id) ? 'Completed' : marking ? 'Marking…' : 'Mark Complete'}
+                  </button>
+                  {markError && (
+                    <p role="alert" className="text-xs text-red-500 dark:text-red-400">
+                      {markError}
+                    </p>
+                  )}
+                </div>
               </div>
             </>
           )}

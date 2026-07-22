@@ -68,8 +68,11 @@ export default function CodeWindow() {
   }, [lineIndex, charIndex]);
 
   return (
-    <div className="relative w-full max-w-md mx-auto lg:mx-0">
-      <div className="absolute -inset-6 bg-royal/25 blur-3xl rounded-full pointer-events-none" aria-hidden="true" />
+    // Purely decorative typing animation — no information here isn't
+    // already conveyed by the surrounding hero copy, so screen readers
+    // should skip it rather than announce a stream of mutating code tokens.
+    <div className="relative w-full max-w-md mx-auto lg:mx-0" aria-hidden="true">
+      <div className="absolute -inset-6 bg-royal/25 blur-3xl rounded-full pointer-events-none" />
       <div className="relative glass rounded-2xl shadow-card-lg overflow-hidden animate-float">
         <div className="flex items-center gap-2 px-4 py-3.5 border-b border-white/10 bg-white/5">
           <span className="w-3 h-3 rounded-full bg-[#FF5F56]" />

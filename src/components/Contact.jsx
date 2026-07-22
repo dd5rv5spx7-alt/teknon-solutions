@@ -144,7 +144,7 @@ export default function Contact() {
 
           <div className="lg:col-span-3 rounded-3xl bg-white dark:bg-white/[0.04] border border-navy/8 dark:border-white/10 p-7 sm:p-9">
             {status === 'success' ? (
-              <div className="h-full min-h-[380px] flex flex-col items-center justify-center text-center gap-4">
+              <div role="status" className="h-full min-h-[380px] flex flex-col items-center justify-center text-center gap-4">
                 <span className="w-14 h-14 grid place-items-center rounded-full bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent">
                   <CheckCircle2 size={26} />
                 </span>

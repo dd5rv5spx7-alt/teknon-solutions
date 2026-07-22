@@ -13,6 +13,7 @@ export default function StudentDashboard() {
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   const [enquiries, setEnquiries] = useState([]);
   const [loadingEnquiries, setLoadingEnquiries] = useState(true);
@@ -36,6 +37,16 @@ export default function StudentDashboard() {
   const [loadingAssignments, setLoadingAssignments] = useState(true);
   const [draftByAssignment, setDraftByAssignment] = useState({}); // assignment_id -> { text, url }
   const [submittingId, setSubmittingId] = useState(null);
+  const [submitErrors, setSubmitErrors] = useState({}); // assignment_id -> error message
+
+  const headingRef = useRef(null);
+  // Client-side route change (post-login redirect or a direct SPA nav into
+  // /student) leaves focus wherever it was — nothing tells a screen reader
+  // it landed on a new page. Move focus to the page heading, same technique
+  // used for full-page navigations.
+  useEffect(() => {
+    headingRef.current?.focus();
+  }, []);
 
   useEffect(() => {
     if (!session?.user?.id) return;
@@ -132,6 +143,7 @@ export default function StudentDashboard() {
     const draft = draftByAssignment[assignmentId] || {};
     if (!draft.text?.trim() && !draft.url?.trim()) return;
     setSubmittingId(assignmentId);
+    setSubmitErrors((prev) => ({ ...prev, [assignmentId]: '' }));
     const payload = {
       assignment_id: assignmentId,
       student_id: session.user.id,
@@ -146,6 +158,8 @@ export default function StudentDashboard() {
     setSubmittingId(null);
     if (!error) {
       setSubmissions((prev) => ({ ...prev, [assignmentId]: data }));
+    } else {
+      setSubmitErrors((prev) => ({ ...prev, [assignmentId]: 'Could not submit. Please try again.' }));
     }
   }
 
@@ -153,6 +167,7 @@ export default function StudentDashboard() {
     e.preventDefault();
     setSaving(true);
     setSaved(false);
+    setSaveError('');
     const { error } = await supabase
       .from('profiles')
       .update({ full_name: form.full_name, phone: form.phone })
@@ -162,6 +177,8 @@ export default function StudentDashboard() {
       setProfile((p) => ({ ...p, ...form }));
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
+    } else {
+      setSaveError('Could not save your changes. Please try again.');
     }
   }
 
@@ -186,7 +203,11 @@ export default function StudentDashboard() {
           open a course's Continue Learning link to see per-lesson completion.
         </div>
 
-        <h1 className="font-display font-bold text-2xl text-navy dark:text-white mb-1">
+        <h1
+          ref={headingRef}
+          tabIndex={-1}
+          className="font-display font-bold text-2xl text-navy dark:text-white mb-1 focus:outline-none"
+        >
           Hi{profile?.full_name ? `, ${profile.full_name.split(' ')[0]}` : ''} 👋
         </h1>
         <p className="text-sm text-slatesoft dark:text-white/50 mb-8">{session?.user?.email}</p>
@@ -250,6 +271,11 @@ export default function StudentDashboard() {
                 {saving ? <Loader2 size={14} className="animate-spin" /> : <Save size={14} />}
                 {saved ? 'Saved!' : saving ? 'Saving…' : 'Save changes'}
               </button>
+              {saveError && (
+                <p role="alert" className="text-sm text-red-500 dark:text-red-400">
+                  {saveError}
+                </p>
+              )}
             </form>
           )}
         </div>
@@ -391,6 +417,11 @@ export default function StudentDashboard() {
                           <Send size={12} /> {sub ? 'Resubmit' : 'Submit'}
                         </button>
                       </div>
+                    )}
+                    {submitErrors[a.id] && (
+                      <p role="alert" className="text-xs text-red-500 dark:text-red-400 mt-1.5">
+                        {submitErrors[a.id]}
+                      </p>
                     )}
                   </div>
                 );

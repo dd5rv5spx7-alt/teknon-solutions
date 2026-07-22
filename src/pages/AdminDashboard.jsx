@@ -137,6 +137,7 @@ export default function AdminDashboard() {
             <button
               key={tab}
               onClick={() => setStatusFilter(tab)}
+              aria-pressed={statusFilter === tab}
               className={`px-3.5 py-1.5 rounded-full text-xs font-semibold font-mono uppercase tracking-wide transition-colors ${
                 statusFilter === tab
                   ? 'bg-royal text-white'

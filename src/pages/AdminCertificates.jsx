@@ -1,7 +1,8 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Award, Plus, X, Loader2, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
+import useFocusTrap from '../components/admin/useFocusTrap.js';
 
 function generateCertificateNumber() {
   const year = new Date().getFullYear();
@@ -80,6 +81,7 @@ export default function AdminCertificates() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search student, course, certificate number…"
+            aria-label="Search certificates"
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50"
           />
         </div>
@@ -150,40 +152,7 @@ function IssueCertificateModal({ students, issuerId, accessToken, onClose, onIss
   const [courseTitle, setCourseTitle] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
-
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll(
-      'input, select, textarea, button, [href], [tabindex]:not([tabindex="-1"])'
-    );
-    focusable[0]?.focus();
-
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (e.key === 'Tab' && focusable.length > 0) {
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused.current?.focus?.();
-    };
-  }, [onClose]);
+  const dialogRef = useFocusTrap(onClose);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -249,8 +218,9 @@ function IssueCertificateModal({ students, issuerId, accessToken, onClose, onIss
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Student</label>
+            <label htmlFor="issue-cert-student" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Student</label>
             <select
+              id="issue-cert-student"
               required
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
@@ -267,8 +237,9 @@ function IssueCertificateModal({ students, issuerId, accessToken, onClose, onIss
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Course / program title</label>
+            <label htmlFor="issue-cert-course" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Course / program title</label>
             <input
+              id="issue-cert-course"
               type="text"
               required
               value={courseTitle}

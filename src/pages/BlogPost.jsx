@@ -12,6 +12,7 @@ export default function BlogPost() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -21,18 +22,28 @@ export default function BlogPost() {
     }
     setLoading(true);
     setNotFound(false);
+    setLoadError(false);
     supabase
       .from('blog_posts')
       .select('*')
       .eq('slug', slug)
       .eq('is_published', true)
       .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
+      .then(({ data, error }) => {
+        if (error) {
+          setLoadError(true);
+        } else if (data) {
           setPost(data);
         } else {
           setNotFound(true);
         }
+        setLoading(false);
+      })
+      // A network-level failure rejects rather than resolving with {error} —
+      // without this the spinner would spin forever instead of ever
+      // reaching an error state.
+      .catch(() => {
+        setLoadError(true);
         setLoading(false);
       });
   }, [slug]);
@@ -80,6 +91,13 @@ export default function BlogPost() {
           path={`/blog/${slug}`}
           noindex
         />
+      ) : loadError ? (
+        <Seo
+          title="Couldn't load this post | A Teknon Solutions"
+          description="This blog post couldn't be loaded right now."
+          path={`/blog/${slug}`}
+          noindex
+        />
       ) : (
         <Seo title="Loading… | A Teknon Solutions" description="Loading this post." path={`/blog/${slug}`} noindex />
       )}
@@ -101,6 +119,15 @@ export default function BlogPost() {
               <p className="font-display font-bold text-xl text-navy dark:text-white">Post not found</p>
               <p className="mt-2 text-sm text-slatesoft dark:text-white/50">
                 This post may have been unpublished or the link is incorrect.
+              </p>
+            </div>
+          )}
+
+          {!loading && loadError && (
+            <div className="text-center py-20">
+              <p className="font-display font-bold text-xl text-navy dark:text-white">Couldn&rsquo;t load this post</p>
+              <p className="mt-2 text-sm text-slatesoft dark:text-white/50">
+                Something went wrong on our end — please refresh or try again shortly.
               </p>
             </div>
           )}
@@ -132,7 +159,12 @@ export default function BlogPost() {
                 <img
                   src={post.featured_image}
                   alt={post.title}
-                  loading="lazy"
+                  // This sits right under the title/meta as the first real
+                  // content image — almost always the LCP element on this
+                  // route, so unlike below-the-fold images it should load
+                  // eagerly rather than lazily.
+                  loading="eager"
+                  fetchPriority="high"
                   className="w-full aspect-[16/9] object-cover rounded-2xl mb-8"
                 />
               )}

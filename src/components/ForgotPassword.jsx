@@ -70,9 +70,13 @@ export default function ForgotPassword() {
           id="forgot-password-email"
           type="email"
           required
+          autoFocus
           autoComplete="email"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={(e) => {
+            setEmail(e.target.value);
+            if (error) setError('');
+          }}
           disabled={!isSupabaseConfigured}
           placeholder="your account email"
           className="flex-1 px-3 py-2 rounded-lg bg-white/5 border border-white/15 text-white placeholder:text-white/50 text-xs focus:border-accent/50 disabled:opacity-50"

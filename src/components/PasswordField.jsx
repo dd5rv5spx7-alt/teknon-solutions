@@ -4,7 +4,7 @@ import { Eye, EyeOff } from 'lucide-react';
 // Shared by AdminLogin, StudentLogin, and ResetPassword (twice) — a masked
 // input with a show/hide toggle. No focus:outline-hidden here on purpose: the
 // project's global input:focus-visible ring (src/index.css) needs to win.
-export default function PasswordField({ id, value, onChange, placeholder, autoComplete, disabled }) {
+export default function PasswordField({ id, value, onChange, placeholder, autoComplete, disabled, ...rest }) {
   const [visible, setVisible] = useState(false);
 
   return (
@@ -19,6 +19,7 @@ export default function PasswordField({ id, value, onChange, placeholder, autoCo
         disabled={disabled}
         placeholder={placeholder}
         className="w-full px-4 py-3 pr-11 rounded-xl bg-white/5 border border-white/15 text-white placeholder:text-white/60 text-sm focus:border-accent/50 disabled:opacity-50"
+        {...rest}
       />
       <button
         type="button"

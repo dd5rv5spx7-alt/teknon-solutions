@@ -10,6 +10,7 @@ import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.js';
 export default function BlogList() {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!isSupabaseConfigured) {
@@ -21,8 +22,16 @@ export default function BlogList() {
       .select('*')
       .eq('is_published', true)
       .order('published_at', { ascending: false })
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) setLoadError(true);
         setPosts(data ?? []);
+        setLoading(false);
+      })
+      // A network-level failure (offline, DNS, CORS) rejects rather than
+      // resolving with {error} — without this the spinner above would spin
+      // forever instead of ever reaching an empty/error state.
+      .catch(() => {
+        setLoadError(true);
         setLoading(false);
       });
   }, []);
@@ -55,7 +64,11 @@ export default function BlogList() {
             </div>
           )}
 
-          {!loading && posts.length === 0 && (
+          {!loading && loadError && (
+            <p className="text-sm text-red-500 dark:text-red-300">Couldn&rsquo;t load posts right now — please refresh or try again shortly.</p>
+          )}
+
+          {!loading && !loadError && posts.length === 0 && (
             <p className="text-sm text-slatesoft dark:text-white/50">No posts published yet — check back soon.</p>
           )}
 

@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { FileCheck2, Plus, X, Loader2, Pencil, Trash2, ExternalLink } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.jsx';
 import { supabase } from '../lib/supabaseClient.js';
+import useFocusTrap from '../components/admin/useFocusTrap.js';
 
 const EMPTY_FORM = { course_id: '', title: '', description: '', due_date: '', max_score: '' };
 
@@ -56,7 +57,7 @@ export default function AdminAssignments() {
       )}
 
       <div className="flex flex-col sm:flex-row sm:items-center gap-3 mb-6">
-        <select value={courseId} onChange={(e) => setCourseId(e.target.value)} className="modal-input flex-1">
+        <select value={courseId} onChange={(e) => setCourseId(e.target.value)} aria-label="Filter by course" className="modal-input flex-1">
           <option value="">All courses</option>
           {courses.map((c) => (
             <option key={c.id} value={c.id}>
@@ -139,6 +140,7 @@ function AssignmentModal({ assignment, courses, onClose, onSaved }) {
   });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const dialogRef = useFocusTrap(onClose);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -163,6 +165,7 @@ function AssignmentModal({ assignment, courses, onClose, onSaved }) {
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="assignment-modal-title"
@@ -243,6 +246,7 @@ function SubmissionsModal({ assignment, onClose }) {
   const [loading, setLoading] = useState(true);
   const [gradingId, setGradingId] = useState(null);
   const [gradeDraft, setGradeDraft] = useState({});
+  const dialogRef = useFocusTrap(onClose);
 
   useEffect(() => {
     supabase
@@ -279,6 +283,7 @@ function SubmissionsModal({ assignment, onClose }) {
   return (
     <div className="fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="submissions-modal-title"
@@ -327,8 +332,9 @@ function SubmissionsModal({ assignment, onClose }) {
                 )}
                 <div className="flex gap-2 items-end mt-2">
                   <div className="w-24">
-                    <label className="block text-[11px] font-semibold text-navy dark:text-white mb-1">Grade</label>
+                    <label htmlFor={`grade-${s.id}`} className="block text-[11px] font-semibold text-navy dark:text-white mb-1">Grade</label>
                     <input
+                      id={`grade-${s.id}`}
                       type="number"
                       defaultValue={s.grade ?? ''}
                       onChange={(e) => setGradeDraft((d) => ({ ...d, [s.id]: { ...d[s.id], grade: e.target.value } }))}
@@ -336,8 +342,9 @@ function SubmissionsModal({ assignment, onClose }) {
                     />
                   </div>
                   <div className="flex-1">
-                    <label className="block text-[11px] font-semibold text-navy dark:text-white mb-1">Feedback</label>
+                    <label htmlFor={`feedback-${s.id}`} className="block text-[11px] font-semibold text-navy dark:text-white mb-1">Feedback</label>
                     <input
+                      id={`feedback-${s.id}`}
                       type="text"
                       defaultValue={s.feedback ?? ''}
                       onChange={(e) => setGradeDraft((d) => ({ ...d, [s.id]: { ...d[s.id], feedback: e.target.value } }))}
@@ -361,11 +368,20 @@ function SubmissionsModal({ assignment, onClose }) {
   );
 }
 
+// The label previously sat as a plain sibling of the control with no
+// htmlFor/id or nesting — visually a label, but with no programmatic
+// association a screen reader could use to announce it. Cloning the id onto
+// the single input/select/textarea child (when there is one) restores that
+// without touching every call site.
 function Field({ label, children }) {
+  const id = React.useId();
+  const associable = React.isValidElement(children) && ['input', 'select', 'textarea'].includes(children.type);
   return (
     <div>
-      <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">{label}</label>
-      {children}
+      <label htmlFor={associable ? id : undefined} className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+        {label}
+      </label>
+      {associable ? React.cloneElement(children, { id }) : children}
     </div>
   );
 }

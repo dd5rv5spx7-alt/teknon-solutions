@@ -140,8 +140,8 @@ export default function AdminAttendance() {
 
       <div className="grid sm:grid-cols-2 gap-3 mb-6">
         <div>
-          <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Batch</label>
-          <select value={batchId} onChange={(e) => setBatchId(e.target.value)} className="modal-input">
+          <label htmlFor="attendance-batch" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Batch</label>
+          <select id="attendance-batch" value={batchId} onChange={(e) => setBatchId(e.target.value)} className="modal-input">
             <option value="">Select a batch…</option>
             {batches.map((b) => (
               <option key={b.id} value={b.id}>
@@ -151,8 +151,8 @@ export default function AdminAttendance() {
           </select>
         </div>
         <div>
-          <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Session</label>
-          <select value={sessionId} onChange={(e) => setSessionId(e.target.value)} disabled={!batchId || sessions.length === 0} className="modal-input disabled:opacity-50">
+          <label htmlFor="attendance-session" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Session</label>
+          <select id="attendance-session" value={sessionId} onChange={(e) => setSessionId(e.target.value)} disabled={!batchId || sessions.length === 0} className="modal-input disabled:opacity-50">
             {sessions.length === 0 && <option value="">No sessions yet</option>}
             {sessions.map((s) => (
               <option key={s.id} value={s.id}>
@@ -167,12 +167,13 @@ export default function AdminAttendance() {
       {batchId && canWrite && (
         <form onSubmit={createSession} className="flex flex-col sm:flex-row gap-2 mb-6 items-end">
           <div className="flex-1">
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">New session date</label>
-            <input type="date" required value={newSessionDate} onChange={(e) => setNewSessionDate(e.target.value)} className="modal-input" />
+            <label htmlFor="new-session-date" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">New session date</label>
+            <input id="new-session-date" type="date" required value={newSessionDate} onChange={(e) => setNewSessionDate(e.target.value)} className="modal-input" />
           </div>
           <div className="flex-1">
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Topic (optional)</label>
+            <label htmlFor="new-session-topic" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Topic (optional)</label>
             <input
+              id="new-session-topic"
               type="text"
               value={newSessionTopic}
               onChange={(e) => setNewSessionTopic(e.target.value)}
@@ -220,6 +221,7 @@ export default function AdminAttendance() {
                       disabled={!canWrite}
                       onClick={() => markStatus(r.student_id, opt.value)}
                       title={opt.label}
+                      aria-pressed={r.status === opt.value}
                       className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold border transition-colors disabled:opacity-40 ${
                         r.status === opt.value ? opt.color : 'border-navy/10 dark:border-white/15 text-slatesoft dark:text-white/40'
                       }`}

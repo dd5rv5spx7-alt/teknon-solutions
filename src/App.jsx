@@ -20,9 +20,38 @@ const ResetPasswordApp = lazy(() => import('./routes/ResetPasswordApp.jsx'));
 
 function RouteFallback() {
   return (
-    <div className="min-h-screen grid place-items-center bg-navy text-white/50 text-sm font-mono">
+    <div
+      role="status"
+      aria-live="polite"
+      className="min-h-screen grid place-items-center bg-navy text-white/50 text-sm font-mono"
+    >
       Loading…
     </div>
+  );
+}
+
+// Keyboard/screen-reader users otherwise have to tab through the full nav on
+// every single page before reaching content — no page in src/pages ever
+// renders more than one <main>, so a generic selector works across routes
+// without every page needing to own an id="main-content" anchor itself.
+function SkipToContent() {
+  const handleSkip = (e) => {
+    const main = document.querySelector('main');
+    if (!main) return;
+    e.preventDefault();
+    if (!main.hasAttribute('tabindex')) main.setAttribute('tabindex', '-1');
+    main.focus();
+    main.scrollIntoView();
+  };
+
+  return (
+    <a
+      href="#main-content"
+      onClick={handleSkip}
+      className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[999] focus:rounded-lg focus:bg-navy focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white focus:shadow-card-lg"
+    >
+      Skip to main content
+    </a>
   );
 }
 
@@ -31,6 +60,7 @@ export default function App() {
     <HelmetProvider>
       <ThemeProvider>
         <BrowserRouter>
+          <SkipToContent />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
               <Route path="/" element={<MarketingSite />} />

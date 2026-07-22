@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { CreditCard, Loader2, Search, Download, IndianRupee, TrendingUp, Receipt, ExternalLink, Undo2, X, FileText } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import StatCard from '../components/admin/StatCard.jsx';
 import { downloadCsv } from '../lib/csv.js';
 import InvoiceModal from '../components/InvoiceModal.jsx';
+import useFocusTrap from '../components/admin/useFocusTrap.js';
 
 const TIER_LABELS = {
   starter: 'Starter (2-week)',
@@ -153,6 +154,7 @@ export default function AdminPayments() {
           <button
             key={tab}
             onClick={() => setStatusFilter(tab)}
+            aria-pressed={statusFilter === tab}
             className={`px-3.5 py-1.5 rounded-full text-xs font-semibold font-mono uppercase tracking-wide transition-colors ${
               statusFilter === tab
                 ? 'bg-royal text-white'
@@ -278,22 +280,7 @@ function RefundModal({ payment, accessToken, onClose, onRefunded }) {
   const [amountRupees, setAmountRupees] = useState((remaining / 100).toString());
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
-
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll('input, button, [href], [tabindex]:not([tabindex="-1"])');
-    focusable[0]?.focus();
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') onClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => {
-      document.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused.current?.focus?.();
-    };
-  }, [onClose]);
+  const dialogRef = useFocusTrap(onClose);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -349,8 +336,9 @@ function RefundModal({ payment, accessToken, onClose, onRefunded }) {
             Up to ₹{(remaining / 100).toFixed(2)} refundable on this payment (Razorpay ID {payment.razorpay_payment_id}).
           </p>
           <div>
-            <label className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Refund amount (₹)</label>
+            <label htmlFor="refund-amount" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">Refund amount (₹)</label>
             <input
+              id="refund-amount"
               type="number"
               step="0.01"
               min="0.01"

@@ -91,6 +91,7 @@ export default function Footer() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="you@example.com"
+                  aria-label="Email address"
                   className="min-w-0 flex-1 px-3.5 py-2.5 rounded-lg bg-white/5 border border-white/15 text-white text-sm placeholder:text-white/30 focus:outline-hidden focus:border-accent/50"
                 />
                 <button

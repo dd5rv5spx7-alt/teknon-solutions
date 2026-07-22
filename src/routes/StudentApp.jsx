@@ -11,7 +11,11 @@ const StudentLearn = lazy(() => import('../pages/StudentLearn.jsx'));
 
 function RouteFallback() {
   return (
-    <div className="min-h-screen grid place-items-center bg-navy text-white/50 text-sm font-mono">
+    <div
+      role="status"
+      aria-live="polite"
+      className="min-h-screen grid place-items-center bg-navy text-white/50 text-sm font-mono"
+    >
       Loading…
     </div>
   );

@@ -86,6 +86,7 @@ export default function VerifyCertificate() {
                     value={certNumber}
                     onChange={(e) => setCertNumber(e.target.value)}
                     placeholder="e.g. TS-2026-483920"
+                    aria-label="Certificate number"
                     className="w-full pl-10 pr-4 py-3.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50 transition-colors"
                   />
                 </div>
@@ -99,31 +100,36 @@ export default function VerifyCertificate() {
                 </button>
               </form>
 
-              {error && <p className="text-sm text-red-500 text-center mb-6">{error}</p>}
+              {/* aria-live so a screen-reader user who just submitted the form hears
+                  the outcome without needing to go find it — none of these three
+                  states are guaranteed to receive focus on their own. */}
+              <div aria-live="polite">
+                {error && <p className="text-sm text-red-500 text-center mb-6">{error}</p>}
 
-              {result === null && (
-                <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
-                  <XCircle size={28} className="mx-auto text-red-500 mb-3" />
-                  <p className="font-display font-bold text-navy dark:text-white">Certificate not found</p>
-                  <p className="text-sm text-slatesoft dark:text-white/50 mt-1">
-                    Double-check the certificate number and try again.
-                  </p>
-                </div>
-              )}
-
-              {result && (
-                <div className="rounded-3xl border-2 border-royal/20 dark:border-accent/30 bg-grad-navy p-8 text-center">
-                  <CheckCircle2 size={32} className="mx-auto text-emerald-400 mb-4" />
-                  <p className="text-xs uppercase tracking-wide text-white/50 mb-2">Verified Certificate</p>
-                  <p className="font-display font-extrabold text-2xl text-white mb-4">{result.student_name}</p>
-                  <p className="text-sm text-white/70 mb-1">has successfully completed</p>
-                  <p className="font-display font-bold text-lg text-accent mb-6">{result.course_title}</p>
-                  <div className="flex items-center justify-center gap-6 text-xs text-white/50 font-mono">
-                    <span>{result.certificate_number}</span>
-                    <span>{new Date(result.issued_at).toLocaleDateString()}</span>
+                {result === null && (
+                  <div className="rounded-2xl border border-red-500/20 bg-red-500/5 p-6 text-center">
+                    <XCircle size={28} className="mx-auto text-red-500 mb-3" />
+                    <p className="font-display font-bold text-navy dark:text-white">Certificate not found</p>
+                    <p className="text-sm text-slatesoft dark:text-white/50 mt-1">
+                      Double-check the certificate number and try again.
+                    </p>
                   </div>
-                </div>
-              )}
+                )}
+
+                {result && (
+                  <div className="rounded-3xl border-2 border-royal/20 dark:border-accent/30 bg-grad-navy p-8 text-center">
+                    <CheckCircle2 size={32} className="mx-auto text-emerald-400 mb-4" />
+                    <p className="text-xs uppercase tracking-wide text-white/50 mb-2">Verified Certificate</p>
+                    <p className="font-display font-extrabold text-2xl text-white mb-4">{result.student_name}</p>
+                    <p className="text-sm text-white/70 mb-1">has successfully completed</p>
+                    <p className="font-display font-bold text-lg text-accent mb-6">{result.course_title}</p>
+                    <div className="flex items-center justify-center gap-6 text-xs text-white/50 font-mono">
+                      <span>{result.certificate_number}</span>
+                      <span>{new Date(result.issued_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
