@@ -12,7 +12,6 @@
 // parsed body is not guaranteed byte-identical to what Razorpay actually
 // sent), so body parsing is disabled for this route.
 
-import crypto from 'node:crypto';
 import { TIER_PRICES } from './_lib/pricing.js';
 import { sendEmail, isEmailConfigured } from './_lib/email.js';
 import {
@@ -24,14 +23,13 @@ import {
   studentPaymentEmailHtml,
 } from './_lib/emailTemplates.js';
 import { recordPayment, recordFailedPayment, recordRefund } from './_lib/payments.js';
+import { verifyWebhookSignature } from './_lib/razorpaySignature.js';
 
 export const config = {
   api: {
     bodyParser: false,
   },
 };
-
-const SIGNATURE_RE = /^[0-9a-f]{64}$/i;
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -55,13 +53,12 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: 'Could not read request body' });
   }
 
-  const providedSig = String(req.headers['x-razorpay-signature'] || '');
-  if (!SIGNATURE_RE.test(providedSig)) {
-    return res.status(400).json({ ok: false, error: 'Invalid signature' });
-  }
-
-  const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
-  const valid = crypto.timingSafeEqual(Buffer.from(expected), Buffer.from(providedSig));
+  // See api/_lib/razorpaySignature.js (tested in tests/razorpaySignature.test.js).
+  const valid = verifyWebhookSignature({
+    rawBody,
+    providedSignature: req.headers['x-razorpay-signature'],
+    secret,
+  });
   if (!valid) {
     return res.status(400).json({ ok: false, error: 'Invalid signature' });
   }

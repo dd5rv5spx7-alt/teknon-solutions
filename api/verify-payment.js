@@ -18,17 +18,16 @@
 //      could be resubmitted with a claimed tier of 'advanced' and get
 //      recorded — and emailed to the admin — as a ₹6,999 Advanced payment.
 
-import crypto from 'node:crypto';
 import { getClientIp, isRateLimited } from './_lib/rateLimit.js';
 import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
 import { sendEmail, isEmailConfigured } from './_lib/email.js';
 import { TEAM_EMAIL, adminPaymentEmailHtml, studentPaymentEmailHtml } from './_lib/emailTemplates.js';
 import { recordPayment } from './_lib/payments.js';
+import { verifyOrderPaymentSignature } from './_lib/razorpaySignature.js';
 
 const MAX_BODY_BYTES = 5_000;
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 20 }; // 20 verify attempts / 10 min / IP
-const SIGNATURE_RE = /^[0-9a-f]{64}$/i; // a HMAC-SHA256 hex digest is always exactly this shape
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -59,23 +58,14 @@ export default async function handler(req, res) {
     return res.status(500).json({ ok: false, error: 'Payments are not configured yet on this deployment.' });
   }
 
-  // 1. Signature check. Validate hex-digest shape BEFORE timingSafeEqual —
-  // that function throws (rather than returning false) on mismatched buffer
-  // byte lengths, and JS string .length (UTF-16 code units) is not the same
-  // thing as UTF-8 byte length for non-ASCII input, so a naive length
-  // pre-check can itself be bypassed into an uncaught crash. A regex on the
-  // expected fixed hex shape sidesteps that entirely.
-  const providedSignature = String(razorpay_signature);
-  if (!SIGNATURE_RE.test(providedSignature)) {
-    return res.status(400).json({ ok: false, error: 'Payment could not be verified.' });
-  }
-
-  const expectedSignature = crypto
-    .createHmac('sha256', keySecret)
-    .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-    .digest('hex');
-
-  const signatureValid = crypto.timingSafeEqual(Buffer.from(expectedSignature), Buffer.from(providedSignature));
+  // 1. Signature check — see api/_lib/razorpaySignature.js (tested in
+  // tests/razorpaySignature.test.js) for why the shape check comes first.
+  const signatureValid = verifyOrderPaymentSignature({
+    orderId: razorpay_order_id,
+    paymentId: razorpay_payment_id,
+    providedSignature: razorpay_signature,
+    keySecret,
+  });
   if (!signatureValid) {
     return res.status(400).json({ ok: false, error: 'Payment could not be verified.' });
   }
