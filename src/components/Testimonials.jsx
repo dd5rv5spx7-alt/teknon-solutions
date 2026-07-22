@@ -7,7 +7,11 @@ import { TESTIMONIALS } from '../data/siteData.js';
 export default function Testimonials() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const testimonials = useSiteContent('testimonials', TESTIMONIALS);
+  const rawTestimonials = useSiteContent('testimonials', TESTIMONIALS);
+  // Guards against a saved CMS override of `[]` — the admin editor rejects
+  // empty saves too, but this is what actually stands between a bad row and
+  // a broken homepage, so it can't only live on the write side.
+  const testimonials = rawTestimonials.length > 0 ? rawTestimonials : TESTIMONIALS;
 
   const next = useCallback(() => setIndex((i) => (i + 1) % testimonials.length), [testimonials.length]);
   const prev = useCallback(() => setIndex((i) => (i - 1 + testimonials.length) % testimonials.length), [testimonials.length]);

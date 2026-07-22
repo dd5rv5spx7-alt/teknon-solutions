@@ -55,6 +55,7 @@ export default function AdminCoupons() {
     setUpdatingId(coupon.id);
     const { error: err } = await supabase.from('coupons').update({ active: !coupon.active }).eq('id', coupon.id);
     if (!err) setCoupons((list) => list.map((c) => (c.id === coupon.id ? { ...c, active: !c.active } : c)));
+    else window.alert(`Couldn't update this coupon: ${err.message}`);
     setUpdatingId(null);
   }
 
@@ -316,7 +317,7 @@ function CouponModal({ coupon, onClose, onSaved }) {
             </Field>
           </div>
 
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
 
           <button
             type="submit"

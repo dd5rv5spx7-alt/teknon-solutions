@@ -5,7 +5,15 @@ import Seo from '../components/Seo.jsx';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.js';
+
+// A raw fetch against Supabase's REST API, deliberately NOT the
+// @supabase/supabase-js client — this page (and BlogPost.jsx) is public,
+// sitemap-indexed, and statically imported into the marketing bundle.
+// Pulling in the ~53KB (gzip) SDK for one unauthenticated SELECT was pure
+// bundle bloat; same pattern already used by src/hooks/useSiteContent.js.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 export default function BlogList() {
   const [posts, setPosts] = useState([]);
@@ -17,19 +25,18 @@ export default function BlogList() {
       setLoading(false);
       return;
     }
-    supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('is_published', true)
-      .order('published_at', { ascending: false })
-      .then(({ data, error }) => {
-        if (error) setLoadError(true);
+    fetch(
+      `${SUPABASE_URL}/rest/v1/blog_posts?is_published=eq.true&order=published_at.desc&select=*`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    )
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((data) => {
         setPosts(data ?? []);
         setLoading(false);
       })
-      // A network-level failure (offline, DNS, CORS) rejects rather than
-      // resolving with {error} — without this the spinner above would spin
-      // forever instead of ever reaching an empty/error state.
+      // A network-level failure (offline, DNS, CORS) or a non-OK response
+      // rejects rather than resolving — without this the spinner above
+      // would spin forever instead of ever reaching an empty/error state.
       .catch(() => {
         setLoadError(true);
         setLoading(false);

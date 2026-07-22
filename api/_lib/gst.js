@@ -26,8 +26,19 @@ export function isValidGstin(gstin) {
 
 // amount is the paise actually charged (net of any coupon discount) — GST
 // is computed on what was actually paid, not the tier's list price.
-export function computeGstSplit(amount, gstin) {
-  const stateCode = gstin ? String(gstin).slice(0, 2) : null;
+//
+// State resolution: a GSTIN's first two digits ARE its registered state
+// code and are legally authoritative for a B2B invoice, so a valid GSTIN
+// always wins. Most buyers never provide one though (individual B2C
+// checkout, not a business claiming input tax credit) — for those,
+// billingState (collected as a required field at checkout, see
+// CheckoutModal.jsx) is the only real signal of where the buyer actually
+// is. Previously this fell back to treating "no GSTIN" as inter-state
+// unconditionally, which misclassified the large majority of consumer
+// invoices regardless of the buyer's actual state.
+export function computeGstSplit(amount, gstin, billingState) {
+  const gstinStateCode = gstin ? String(gstin).slice(0, 2) : null;
+  const stateCode = gstinStateCode || billingState || null;
   const isIntraState = stateCode === SELLER_STATE_CODE;
   // The charged amount is treated as GST-inclusive (standard practice for
   // consumer-facing pricing in India) — back out the base amount rather

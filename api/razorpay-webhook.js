@@ -84,8 +84,12 @@ export default async function handler(req, res) {
   if (event.event === 'refund.processed' || event.event === 'refund.created') {
     // refund.created fires immediately (refund initiated); refund.processed
     // fires once it's actually settled. Recording on both is harmless —
-    // recordRefund() is a plain update keyed on razorpay_payment_id, so a
-    // second delivery just overwrites with the same (or updated) amount.
+    // recordRefund() is idempotent on razorpay_refund_id (see
+    // supabase/023_refund_correctness.sql), so a second delivery of the
+    // same event is a no-op recompute, not a double-count. refund.amount is
+    // this single refund's own amount, not a cumulative total — the DB
+    // function derives the true cumulative refunded_amount itself from the
+    // refunds ledger.
     const refund = event.payload?.refund?.entity;
     const razorpayPaymentId = refund?.payment_id;
     if (dbConfigured && razorpayPaymentId) {
@@ -93,7 +97,6 @@ export default async function handler(req, res) {
         razorpayPaymentId,
         refundId: refund.id,
         refundedAmount: refund.amount,
-        totalAmount: await lookupPaymentAmount(supabaseUrl, serviceKey, razorpayPaymentId),
       });
     }
     return res.status(200).json({ ok: true });
@@ -143,6 +146,7 @@ export default async function handler(req, res) {
     razorpay_payment_id: String(payment.id || '').slice(0, 100),
     coupon_code: payment.notes?.coupon_code || null,
     discount_amount: discountAmount,
+    billing_state: payment.notes?.billing_state || null,
     gstin: payment.notes?.gstin || null,
     billing_name: payment.notes?.billing_name || null,
     billing_address: payment.notes?.billing_address || null,
@@ -181,20 +185,6 @@ export default async function handler(req, res) {
   }
 
   return res.status(200).json({ ok: true });
-}
-
-async function lookupPaymentAmount(supabaseUrl, serviceKey, razorpayPaymentId) {
-  try {
-    const res = await fetch(
-      `${supabaseUrl}/rest/v1/payments?razorpay_payment_id=eq.${encodeURIComponent(razorpayPaymentId)}&select=amount`,
-      { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
-    );
-    if (!res.ok) return Infinity; // unknown → treat as partial refund rather than wrongly marking fully refunded
-    const rows = await res.json();
-    return rows[0]?.amount ?? Infinity;
-  } catch {
-    return Infinity;
-  }
 }
 
 // A customer whose card gets declined or who abandons the checkout mid-payment

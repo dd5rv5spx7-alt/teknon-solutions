@@ -348,7 +348,7 @@ function RefundModal({ payment, accessToken, onClose, onRefunded }) {
               className="modal-input"
             />
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"
             disabled={submitting}

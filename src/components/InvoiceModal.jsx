@@ -1,5 +1,6 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, Printer } from 'lucide-react';
+import useFocusTrap from './admin/useFocusTrap.js';
 
 // Mirrors api/_lib/gst.js exactly — duplicated because this renders
 // client-side and the invoice must display correctly even if the payment
@@ -11,8 +12,9 @@ const SAC_CODE = '999293';
 const GST_RATE_PERCENT = 18;
 const SELLER_STATE_CODE = '37'; // Andhra Pradesh
 
-function computeGstSplit(amount, gstin) {
-  const stateCode = gstin ? String(gstin).slice(0, 2) : null;
+function computeGstSplit(amount, gstin, billingState) {
+  const gstinStateCode = gstin ? String(gstin).slice(0, 2) : null;
+  const stateCode = gstinStateCode || billingState || null;
   const isIntraState = stateCode === SELLER_STATE_CODE;
   const baseAmount = Math.round((amount * 100) / (100 + GST_RATE_PERCENT));
   const totalTax = amount - baseAmount;
@@ -35,8 +37,6 @@ const TIER_LABELS = {
 
 export default function InvoiceModal({ payment, onClose }) {
   const [visible, setVisible] = useState(false);
-  const dialogRef = useRef(null);
-  const previouslyFocused = useRef(null);
 
   useEffect(() => {
     const raf1 = requestAnimationFrame(() => {
@@ -51,20 +51,10 @@ export default function InvoiceModal({ payment, onClose }) {
     setTimeout(onClose, 200);
   }
 
-  useEffect(() => {
-    previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current?.querySelectorAll('button, [href], [tabindex]:not([tabindex="-1"])');
-    focusable?.[0]?.focus();
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') requestClose();
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const dialogRef = useFocusTrap(requestClose);
 
   const netAmount = payment.amount - (payment.refunded_amount || 0);
-  const split = computeGstSplit(netAmount, payment.gstin);
+  const split = computeGstSplit(netAmount, payment.gstin, payment.billing_state);
 
   return (
     <div

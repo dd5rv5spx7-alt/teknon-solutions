@@ -73,7 +73,13 @@ function SectionEditor({ section, isAdmin }) {
       .select('content')
       .eq('section_key', section.key)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error: err }) => {
+        if (err) {
+          setError(`Could not load current content: ${err.message}`);
+          setRawJson(JSON.stringify(section.fallback, null, 2));
+          setLoading(false);
+          return;
+        }
         setIsOverride(Boolean(data?.content));
         setRawJson(JSON.stringify(data?.content ?? section.fallback, null, 2));
         setLoading(false);
@@ -88,8 +94,8 @@ function SectionEditor({ section, isAdmin }) {
       setError(`Invalid JSON: ${e.message}`);
       return;
     }
-    if (!Array.isArray(parsed)) {
-      setError('This section expects a JSON array.');
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      setError('This section expects a non-empty JSON array.');
       return;
     }
     setSaving(true);
@@ -116,12 +122,15 @@ function SectionEditor({ section, isAdmin }) {
   async function resetToDefault() {
     if (!window.confirm('Remove your override and go back to the built-in default? This cannot be undone.')) return;
     setSaving(true);
+    setError('');
     const { error: err } = await supabase.from('site_content').delete().eq('section_key', section.key);
     setSaving(false);
-    if (!err) {
-      setIsOverride(false);
-      setRawJson(JSON.stringify(section.fallback, null, 2));
+    if (err) {
+      setError(err.message);
+      return;
     }
+    setIsOverride(false);
+    setRawJson(JSON.stringify(section.fallback, null, 2));
   }
 
   return (

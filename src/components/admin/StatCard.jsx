@@ -12,11 +12,11 @@ export default function StatCard({ label, value, icon: Icon, highlight, sub }) {
       }`}
     >
       <div className="flex items-center justify-between mb-2">
-        <span className="text-xs font-mono uppercase tracking-wide text-slatesoft dark:text-white/40">{label}</span>
+        <span className="text-xs font-mono uppercase tracking-wide text-slatesoft dark:text-white/55">{label}</span>
         <Icon size={15} className="text-royal dark:text-accent" />
       </div>
       <p className="font-display font-extrabold text-2xl text-navy dark:text-white">{value}</p>
-      {sub && <p className="text-[11px] text-slatesoft dark:text-white/40 mt-0.5">{sub}</p>}
+      {sub && <p className="text-[11px] text-slatesoft dark:text-white/55 mt-0.5">{sub}</p>}
     </div>
   );
 }

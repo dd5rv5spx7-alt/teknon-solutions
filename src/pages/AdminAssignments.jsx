@@ -227,7 +227,7 @@ function AssignmentModal({ assignment, courses, onClose, onSaved }) {
               />
             </Field>
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"
             disabled={submitting}
@@ -244,8 +244,10 @@ function AssignmentModal({ assignment, courses, onClose, onSaved }) {
 function SubmissionsModal({ assignment, onClose }) {
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [gradingId, setGradingId] = useState(null);
   const [gradeDraft, setGradeDraft] = useState({});
+  const [gradeError, setGradeError] = useState('');
   const dialogRef = useFocusTrap(onClose);
 
   useEffect(() => {
@@ -254,8 +256,9 @@ function SubmissionsModal({ assignment, onClose }) {
       .select('*, profiles!student_id(full_name, email)')
       .eq('assignment_id', assignment.id)
       .order('submitted_at', { ascending: false })
-      .then(({ data }) => {
-        setSubmissions(data ?? []);
+      .then(({ data, error: err }) => {
+        if (err) setLoadError(err.message);
+        else setSubmissions(data ?? []);
         setLoading(false);
       });
   }, [assignment.id]);
@@ -263,21 +266,33 @@ function SubmissionsModal({ assignment, onClose }) {
   async function saveGrade(sub) {
     const draft = gradeDraft[sub.id] || {};
     setGradingId(sub.id);
+    setGradeError('');
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    // A grade of 0 is meaningful and distinct from "leave the existing
+    // grade alone" — parseInt(...)||null would collapse a real 0 to null,
+    // so this checks Number.isNaN explicitly instead.
+    const parsedGrade = draft.grade !== undefined ? parseInt(draft.grade, 10) : NaN;
+    const grade = draft.grade !== undefined && !Number.isNaN(parsedGrade) ? parsedGrade : sub.grade;
     const { error } = await supabase
       .from('assignment_submissions')
       .update({
         status: 'graded',
-        grade: draft.grade !== undefined ? parseInt(draft.grade, 10) || null : sub.grade,
+        grade,
         feedback: draft.feedback !== undefined ? draft.feedback : sub.feedback,
+        graded_by: user?.id,
         graded_at: new Date().toISOString(),
       })
       .eq('id', sub.id);
     setGradingId(null);
-    if (!error) {
-      setSubmissions((list) =>
-        list.map((s) => (s.id === sub.id ? { ...s, status: 'graded', grade: draft.grade ?? s.grade, feedback: draft.feedback ?? s.feedback } : s))
-      );
+    if (error) {
+      setGradeError(`Couldn't save this grade: ${error.message}`);
+      return;
     }
+    setSubmissions((list) =>
+      list.map((s) => (s.id === sub.id ? { ...s, status: 'graded', grade, feedback: draft.feedback ?? s.feedback } : s))
+    );
   }
 
   return (
@@ -303,10 +318,13 @@ function SubmissionsModal({ assignment, onClose }) {
           <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
             <Loader2 size={16} className="animate-spin" /> Loading…
           </div>
+        ) : loadError ? (
+          <p role="alert" className="text-sm text-red-500">Couldn&rsquo;t load submissions: {loadError}</p>
         ) : submissions.length === 0 ? (
           <p className="text-sm text-slatesoft dark:text-white/50">No submissions yet.</p>
         ) : (
           <div className="space-y-4">
+            {gradeError && <p role="alert" className="text-sm text-red-500">{gradeError}</p>}
             {submissions.map((s) => (
               <div key={s.id} className="rounded-xl border border-navy/8 dark:border-white/10 p-4">
                 <div className="flex items-center justify-between mb-2">

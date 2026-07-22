@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SITE_URL = 'https://www.ateknonsolutions.com';
+export const SITE_URL = 'https://www.ateknonsolutions.com';
 const DEFAULT_IMAGE = `${SITE_URL}/og-image.png`;
 
 // Central per-route head manager. index.html carries the correct defaults for

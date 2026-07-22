@@ -54,7 +54,7 @@ export default function AdminBatches() {
   }
 
   async function deleteBatch(id) {
-    if (!window.confirm('Delete this batch? Blocked if any students are enrolled — remove them from the batch first.')) return;
+    if (!window.confirm('Delete this batch? Blocked if any students are enrolled, or if it has attendance sessions recorded — remove those first.')) return;
     setUpdatingId(id);
     const { error: err } = await supabase.from('batches').delete().eq('id', id);
     if (!err) setBatches((list) => list.filter((b) => b.id !== id));
@@ -287,7 +287,7 @@ function BatchModal({ batch, courses, onClose, onSaved }) {
               />
             </Field>
           </div>
-          {error && <p className="text-sm text-red-500">{error}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"
             disabled={submitting}
@@ -324,7 +324,7 @@ function EnrollmentModal({ batch, onClose }) {
         .eq('batch_id', batch.id),
       supabase.from('profiles').select('id, full_name, email').eq('role', 'student').order('full_name', { ascending: true }),
     ]).then(([enrollRes, studentsRes]) => {
-      if (enrollRes.error) setError(enrollRes.error.message);
+      if (enrollRes.error || studentsRes.error) setError((enrollRes.error || studentsRes.error).message);
       setEnrolled(enrollRes.data ?? []);
       setAllStudents(studentsRes.data ?? []);
       setLoading(false);

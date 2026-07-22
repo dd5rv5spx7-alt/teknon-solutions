@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, Loader2, Calendar, User } from 'lucide-react';
-import Seo from '../components/Seo.jsx';
+import Seo, { SITE_URL } from '../components/Seo.jsx';
 import Navbar from '../components/Navbar.jsx';
 import Footer from '../components/Footer.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
-import { supabase, isSupabaseConfigured } from '../lib/supabaseClient.js';
+
+// Raw fetch, not the @supabase/supabase-js client — see BlogList.jsx for why.
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const isSupabaseConfigured = Boolean(SUPABASE_URL && SUPABASE_ANON_KEY);
 
 export default function BlogPost() {
   const { slug } = useParams();
@@ -23,25 +27,19 @@ export default function BlogPost() {
     setLoading(true);
     setNotFound(false);
     setLoadError(false);
-    supabase
-      .from('blog_posts')
-      .select('*')
-      .eq('slug', slug)
-      .eq('is_published', true)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (error) {
-          setLoadError(true);
-        } else if (data) {
-          setPost(data);
-        } else {
-          setNotFound(true);
-        }
+    fetch(
+      `${SUPABASE_URL}/rest/v1/blog_posts?slug=eq.${encodeURIComponent(slug)}&is_published=eq.true&select=*`,
+      { headers: { apikey: SUPABASE_ANON_KEY, Authorization: `Bearer ${SUPABASE_ANON_KEY}` } }
+    )
+      .then((res) => (res.ok ? res.json() : Promise.reject(new Error(`HTTP ${res.status}`))))
+      .then((rows) => {
+        if (rows?.[0]) setPost(rows[0]);
+        else setNotFound(true);
         setLoading(false);
       })
-      // A network-level failure rejects rather than resolving with {error} —
-      // without this the spinner would spin forever instead of ever
-      // reaching an error state.
+      // A network-level failure or non-OK response rejects rather than
+      // resolving — without this the spinner would spin forever instead of
+      // ever reaching an error state.
       .catch(() => {
         setLoadError(true);
         setLoading(false);
@@ -79,9 +77,9 @@ export default function BlogPost() {
             publisher: {
               '@type': 'Organization',
               name: 'A Teknon Solutions',
-              logo: { '@type': 'ImageObject', url: `${window.location.origin}/og-image.png` },
+              logo: { '@type': 'ImageObject', url: `${SITE_URL}/og-image.png` },
             },
-            mainEntityOfPage: { '@type': 'WebPage', '@id': `${window.location.origin}/blog/${slug}` },
+            mainEntityOfPage: { '@type': 'WebPage', '@id': `${SITE_URL}/blog/${slug}` },
           }}
         />
       ) : notFound ? (

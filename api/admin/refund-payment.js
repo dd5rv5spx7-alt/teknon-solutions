@@ -8,7 +8,7 @@
 
 import { getClientIp, isRateLimited } from '../_lib/rateLimit.js';
 import { safeParse } from '../_lib/http.js';
-import { recordRefund } from '../_lib/payments.js';
+import { recordRefund, releaseRefundLock } from '../_lib/payments.js';
 
 const RATE_LIMIT = { windowMs: 60 * 60 * 1000, max: 20 }; // 20 refunds / hour / IP
 const MAX_BODY_BYTES = 2_000;
@@ -105,6 +105,39 @@ export default async function handler(req, res) {
     return res.status(400).json({ ok: false, error: `Only ₹${(remaining / 100).toFixed(2)} remains refundable on this payment.` });
   }
 
+  // Atomically claim the refund lock — a single conditional UPDATE, so this
+  // is the actual guard against two concurrent requests both reaching
+  // Razorpay for the same payment (the `remaining` check above reads a
+  // snapshot that two racing requests could share, and on its own would let
+  // both pass). Same claim-via-conditional-UPDATE pattern already used by
+  // recordPayment() for created->paid. Zero rows matched means either a
+  // refund is already in flight, or the payment's status changed under us.
+  const lockClaimedAt = new Date().toISOString();
+  let locked;
+  try {
+    const lockRes = await fetch(
+      `${supabaseUrl}/rest/v1/payments?id=eq.${encodeURIComponent(paymentRowId)}&refund_locked_at=is.null&status=in.(paid,partially_refunded)`,
+      {
+        method: 'PATCH',
+        headers: {
+          apikey: serviceKey,
+          Authorization: `Bearer ${serviceKey}`,
+          'Content-Type': 'application/json',
+          Prefer: 'return=representation',
+        },
+        body: JSON.stringify({ refund_locked_at: lockClaimedAt }),
+      }
+    );
+    const lockedRows = lockRes.ok ? await lockRes.json().catch(() => []) : [];
+    locked = Array.isArray(lockedRows) && lockedRows.length > 0;
+  } catch (err) {
+    console.error('refund-payment: lock claim threw', err);
+    locked = false;
+  }
+  if (!locked) {
+    return res.status(409).json({ ok: false, error: 'A refund is already in progress for this payment. Please wait a moment and check the payments list.' });
+  }
+
   let refund;
   try {
     const refundRes = await fetch(`https://api.razorpay.com/v1/payments/${encodeURIComponent(payment.razorpay_payment_id)}/refund`, {
@@ -112,6 +145,11 @@ export default async function handler(req, res) {
       headers: {
         Authorization: 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64'),
         'Content-Type': 'application/json',
+        // Ties this specific claimed attempt to one Razorpay-side refund —
+        // if our own connection to Razorpay drops after they've already
+        // processed it, a retry of this exact attempt can't create a
+        // second real refund.
+        'Idempotency-Key': `${paymentRowId}:${refundAmount}:${lockClaimedAt}`,
       },
       body: JSON.stringify({ amount: refundAmount }),
     });
@@ -122,16 +160,22 @@ export default async function handler(req, res) {
     refund = await refundRes.json();
   } catch (err) {
     console.error('refund-payment: Razorpay refund call failed', err);
+    await releaseRefundLock(supabaseUrl, serviceKey, paymentRowId);
     return res.status(502).json({ ok: false, error: 'Could not process the refund with Razorpay. Please try again.' });
   }
 
-  const totalRefunded = (payment.refunded_amount || 0) + refundAmount;
-  await recordRefund(supabaseUrl, serviceKey, {
+  const result = await recordRefund(supabaseUrl, serviceKey, {
     razorpayPaymentId: payment.razorpay_payment_id,
     refundId: refund.id,
-    refundedAmount: totalRefunded,
-    totalAmount: payment.amount,
+    refundedAmount: refundAmount,
   });
+  if (!result) {
+    // The refund genuinely happened at Razorpay even though our local
+    // record of it failed — release the lock so a retry (or the webhook,
+    // once it fires) can still reconcile this, rather than leaving the
+    // payment stuck "in progress" forever.
+    await releaseRefundLock(supabaseUrl, serviceKey, paymentRowId);
+  }
 
-  return res.status(200).json({ ok: true, refund_id: refund.id, refunded_amount: totalRefunded });
+  return res.status(200).json({ ok: true, refund_id: refund.id, refunded_amount: result?.refunded_amount ?? null });
 }

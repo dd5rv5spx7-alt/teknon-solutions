@@ -56,27 +56,35 @@ export default function AdminAttendance() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sessionId]);
 
-  function fetchSessions() {
-    supabase
+  // preferredId lets createSession() ask for the just-created session to be
+  // selected once the list refreshes, instead of always defaulting to
+  // whatever sorts first by date.
+  async function fetchSessions(preferredId) {
+    const { data, error: err } = await supabase
       .from('attendance_sessions')
       .select('id, session_date, topic')
       .eq('batch_id', batchId)
-      .order('session_date', { ascending: false })
-      .then(({ data }) => {
-        setSessions(data ?? []);
-        setSessionId(data?.[0]?.id || '');
-      });
+      .order('session_date', { ascending: false });
+    if (err) {
+      setError(err.message);
+      return;
+    }
+    setSessions(data ?? []);
+    setSessionId(preferredId || data?.[0]?.id || '');
   }
 
   async function fetchRoster() {
     setLoading(true);
     setError('');
-    const [{ data: enrollments, error: enrollErr }, { data: records }] = await Promise.all([
+    const [
+      { data: enrollments, error: enrollErr },
+      { data: records, error: recordsErr },
+    ] = await Promise.all([
       supabase.from('batch_enrollments').select('student_id, profiles!student_id(full_name, email)').eq('batch_id', batchId),
       supabase.from('attendance_records').select('student_id, status').eq('session_id', sessionId),
     ]);
-    if (enrollErr) {
-      setError(enrollErr.message);
+    if (enrollErr || recordsErr) {
+      setError((enrollErr || recordsErr).message);
       setLoading(false);
       return;
     }
@@ -95,13 +103,19 @@ export default function AdminAttendance() {
   }
 
   async function markStatus(studentId, status) {
+    const previousStatus = roster.find((r) => r.student_id === studentId)?.status ?? null;
     setRoster((list) => list.map((r) => (r.student_id === studentId ? { ...r, status } : r)));
     setSaving(true);
     const { error: err } = await supabase
       .from('attendance_records')
       .upsert({ session_id: sessionId, student_id: studentId, status }, { onConflict: 'session_id,student_id' });
     setSaving(false);
-    if (err) setError(err.message);
+    if (err) {
+      setError(err.message);
+      // The optimistic update above assumed success — put the roster back
+      // the way it was so the UI doesn't keep showing an unsaved status.
+      setRoster((list) => list.map((r) => (r.student_id === studentId ? { ...r, status: previousStatus } : r)));
+    }
   }
 
   async function createSession(e) {
@@ -121,8 +135,7 @@ export default function AdminAttendance() {
     }
     setNewSessionDate('');
     setNewSessionTopic('');
-    fetchSessions();
-    setSessionId(data.id);
+    await fetchSessions(data.id);
   }
 
   const presentCount = useMemo(() => roster.filter((r) => r.status === 'present' || r.status === 'late').length, [roster]);

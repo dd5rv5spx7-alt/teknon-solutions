@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { INDIAN_STATES } from '../data/indianStates.js';
 
 let razorpayScriptPromise = null;
 function loadRazorpayScript() {
@@ -30,6 +31,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
+  const [billingState, setBillingState] = useState('');
   const [couponCode, setCouponCode] = useState('');
   const [wantsGstInvoice, setWantsGstInvoice] = useState(false);
   const [gstin, setGstin] = useState('');
@@ -118,6 +120,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
           name,
           email,
           phone,
+          billing_state: billingState,
           coupon_code: couponCode.trim() || undefined,
           gstin: wantsGstInvoice ? gstin.trim() || undefined : undefined,
           billing_name: wantsGstInvoice ? billingName.trim() || undefined : undefined,
@@ -279,6 +282,30 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
                 placeholder="+91 00000 00000"
                 className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:border-royal/50 disabled:opacity-50"
               />
+            </div>
+
+            <div>
+              <label htmlFor="checkout-state" className="block text-xs font-semibold text-navy dark:text-white mb-1.5">
+                Billing state
+              </label>
+              <select
+                id="checkout-state"
+                required
+                value={billingState}
+                onChange={(e) => setBillingState(e.target.value)}
+                disabled={step === 'processing'}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-sm focus:border-royal/50 disabled:opacity-50"
+              >
+                <option value="" disabled>
+                  Select your state
+                </option>
+                {INDIAN_STATES.map((s) => (
+                  <option key={s.code} value={s.code}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+              <p className="text-[11px] text-slatesoft dark:text-white/40 mt-1">Used to correctly split GST (CGST/SGST vs IGST) on your invoice.</p>
             </div>
 
             <div>

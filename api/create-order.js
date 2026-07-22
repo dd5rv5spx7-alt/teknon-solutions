@@ -11,6 +11,7 @@ import { safeParse } from './_lib/http.js';
 import { TIER_PRICES } from './_lib/pricing.js';
 import { validateCoupon } from './_lib/coupons.js';
 import { isValidGstin } from './_lib/gst.js';
+import { INDIAN_STATE_CODES } from './_lib/indianStates.js';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const RATE_LIMIT = { windowMs: 10 * 60 * 1000, max: 8 }; // 8 order attempts / 10 min / IP
@@ -34,6 +35,7 @@ export default async function handler(req, res) {
 
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
   const { tier, name, email, phone } = body;
+  const billingState = body.billing_state ? String(body.billing_state).trim() : '';
   const rawCouponCode = body.coupon_code ? String(body.coupon_code).trim().toUpperCase().slice(0, 50) : '';
   // GST details are optional — only students who need a business invoice fill these in.
   const gstin = body.gstin ? String(body.gstin).trim().toUpperCase().slice(0, 15) : null;
@@ -49,12 +51,19 @@ export default async function handler(req, res) {
   if (!name || String(name).trim().length < 2) errors.push('name');
   if (!email || !EMAIL_RE.test(String(email).trim())) errors.push('email');
   if (!phone || String(phone).replace(/\D/g, '').length < 10) errors.push('phone');
+  if (!INDIAN_STATE_CODES.has(billingState)) errors.push('billing_state');
   if (errors.length) {
     return res.status(400).json({ ok: false, error: 'Invalid or missing fields', fields: errors });
   }
   if (gstin && !isValidGstin(gstin)) {
     return res.status(400).json({ ok: false, error: 'That GSTIN doesn’t look valid — double-check the 15-character format.' });
   }
+
+  // Lowercased consistently, same as api/admin/create-person.js — the RLS
+  // policy letting a student read their own payments by email (migration
+  // 022/025) compares against auth.jwt()'s email claim, and an inconsistent
+  // case here would silently lock a student out of their own invoice.
+  const cleanEmail = String(email).trim().toLowerCase();
 
   const keyId = process.env.RAZORPAY_KEY_ID;
   const keySecret = process.env.RAZORPAY_KEY_SECRET;
@@ -95,10 +104,11 @@ export default async function handler(req, res) {
         notes: {
           tier,
           name: String(name).trim().slice(0, 200),
-          email: String(email).trim().slice(0, 200),
+          email: cleanEmail,
           phone: String(phone).trim().slice(0, 30),
           coupon_code: appliedCouponCode || '',
           discount_amount: String(discountAmount),
+          billing_state: billingState,
           gstin: gstin || '',
           billing_name: billingName || '',
           billing_address: billingAddress || '',
@@ -132,7 +142,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           name: String(name).trim().slice(0, 200),
-          email: String(email).trim().slice(0, 200),
+          email: cleanEmail,
           phone: String(phone).trim().slice(0, 30),
           tier,
           amount: finalAmount,
@@ -141,6 +151,7 @@ export default async function handler(req, res) {
           status: 'created',
           coupon_code: appliedCouponCode,
           discount_amount: discountAmount,
+          billing_state: billingState,
           gstin,
           billing_name: billingName,
           billing_address: billingAddress,
