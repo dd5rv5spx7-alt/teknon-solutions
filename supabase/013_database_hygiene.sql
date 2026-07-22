@@ -56,7 +56,7 @@ alter table public.certificates
 alter table public.certificates add column if not exists student_name text;
 
 update public.certificates c
-set student_name = p.full_name
+set student_name = coalesce(p.full_name, p.email, 'Unknown Student')
 from public.profiles p
 where c.student_id = p.id and c.student_name is null;
 
