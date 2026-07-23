@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { INDIAN_STATES } from '../data/indianStates.js';
 
@@ -206,7 +207,13 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
     }
   }
 
-  return (
+  // Portaled to document.body rather than rendered inline: this component
+  // lives inside <div id="site-root"> (via Pricing.jsx -> MarketingSite.jsx),
+  // and the effect above sets site-root.inert = true while open to keep the
+  // page behind the dialog out of the tab order — inert cascades to every
+  // descendant, so without a portal it would inert the modal's own inputs
+  // too, silently making every field unfillable.
+  return createPortal(
     <div
       className={`fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ease-out ${
         visible ? 'opacity-100' : 'opacity-0'
@@ -418,6 +425,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

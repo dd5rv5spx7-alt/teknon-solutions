@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { LogOut, User, Mail, Phone, Save, Loader2, Inbox, BookOpen, Award, Printer, X, CalendarCheck, FileCheck2, Send, Receipt } from 'lucide-react';
 import InvoiceModal from '../components/InvoiceModal.jsx';
@@ -622,7 +623,11 @@ function CertificateModal({ certificate, studentName, onClose }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  return (
+  // Portaled to document.body: this component renders inside
+  // <div id="student-dashboard-root">, and the effect above inerts that
+  // whole subtree while open — inert cascades to descendants, so without a
+  // portal it would inert this modal's own Close/Print buttons too.
+  return createPortal(
     <div
       className={`fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ease-out ${
         visible ? 'opacity-100' : 'opacity-0'
@@ -667,6 +672,7 @@ function CertificateModal({ certificate, studentName, onClose }) {
           <Printer size={15} /> Print / Save as PDF
         </button>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
