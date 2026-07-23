@@ -80,7 +80,7 @@ export default function AdminAssignments() {
           <Loader2 size={16} className="animate-spin" /> Loading…
         </div>
       )}
-      {error && <p className="text-sm text-red-500">Couldn&rsquo;t load assignments: {error}</p>}
+      {error && <p role="alert" className="text-sm text-red-500">Couldn&rsquo;t load assignments: {error}</p>}
       {!loading && !error && filtered.length === 0 && (
         <p className="text-sm text-slatesoft dark:text-white/50">No assignments yet.</p>
       )}

@@ -63,17 +63,33 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
     setTimeout(onClose, TRANSITION_MS);
   }
 
+  // The Escape handler needs the latest `step` (to stay disabled mid-
+  // payment) without the whole effect re-running on every step change —
+  // re-running it used to re-capture `previouslyFocused` from whatever was
+  // focused *inside* the dialog at that moment (e.g. the processing
+  // spinner), so closing the modal restored focus to a stale inner element
+  // instead of back to the page's "Enroll" button that opened it.
+  const stepRef = useRef(step);
+  useEffect(() => {
+    stepRef.current = step;
+  }, [step]);
+
   useEffect(() => {
     previouslyFocused.current = document.activeElement;
-    const focusable = dialogRef.current.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
-    focusable[0]?.focus();
+    dialogRef.current.querySelector('button, [href], input, [tabindex]:not([tabindex="-1"])')?.focus();
 
     function handleKeyDown(e) {
-      if (e.key === 'Escape' && step !== 'processing') {
+      if (e.key === 'Escape' && stepRef.current !== 'processing') {
         requestClose();
         return;
       }
-      if (e.key === 'Tab' && focusable.length > 0) {
+      // Queried fresh on every Tab press, not the list captured at mount —
+      // the form/success/error steps each render different focusable
+      // elements, and a stale list would trap Tab on whatever was focusable
+      // on the very first render forever.
+      if (e.key === 'Tab') {
+        const focusable = dialogRef.current.querySelectorAll('button, [href], input, [tabindex]:not([tabindex="-1"])');
+        if (focusable.length === 0) return;
         const first = focusable[0];
         const last = focusable[focusable.length - 1];
         if (e.shiftKey && document.activeElement === first) {
@@ -92,7 +108,7 @@ export default function CheckoutModal({ tier, tierLabel, priceDisplay, onClose }
       previouslyFocused.current?.focus?.();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [step]);
+  }, []);
 
   // aria-modal="true" isn't reliably enough on its own to keep a screen
   // reader's virtual cursor out of content behind the dialog — inert on the

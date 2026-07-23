@@ -92,7 +92,7 @@ export default function AdminCoupons() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search code…"
             aria-label="Search coupons"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:border-royal/50"
           />
         </div>
         {isAdmin && (
@@ -106,11 +106,11 @@ export default function AdminCoupons() {
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
           <Loader2 size={16} className="animate-spin" /> Loading…
         </div>
       )}
-      {error && <p className="text-sm text-red-500">Couldn&rsquo;t load coupons: {error}</p>}
+      {error && <p role="alert" className="text-sm text-red-500">Couldn&rsquo;t load coupons: {error}</p>}
       {!loading && !error && filtered.length === 0 && (
         <p className="text-sm text-slatesoft dark:text-white/50">No coupons match.</p>
       )}

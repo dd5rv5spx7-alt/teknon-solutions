@@ -36,7 +36,7 @@ export default function Courses() {
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search courses..."
               aria-label="Search courses"
-              className="w-full pl-11 pr-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:outline-hidden focus:border-royal/50 transition-colors"
+              className="w-full pl-11 pr-4 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white placeholder:text-slatesoft dark:placeholder:text-white/55 text-sm focus:border-royal/50 transition-colors"
             />
           </div>
         </div>

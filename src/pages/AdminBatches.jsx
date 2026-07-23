@@ -86,7 +86,7 @@ export default function AdminBatches() {
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search batch name, course…"
             aria-label="Search batches"
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:outline-hidden focus:border-royal/50"
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-navy/10 dark:border-white/15 bg-white dark:bg-white/5 text-navy dark:text-white text-sm placeholder:text-slatesoft dark:placeholder:text-white/55 focus:border-royal/50"
           />
         </div>
         {isAdmin && (
@@ -100,11 +100,11 @@ export default function AdminBatches() {
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
           <Loader2 size={16} className="animate-spin" /> Loading…
         </div>
       )}
-      {error && <p className="text-sm text-red-500">Couldn&rsquo;t load batches: {error}</p>}
+      {error && <p role="alert" className="text-sm text-red-500">Couldn&rsquo;t load batches: {error}</p>}
       {!loading && !error && filtered.length === 0 && (
         <p className="text-sm text-slatesoft dark:text-white/50">
           {batches.length === 0 ? 'No batches yet — add one to start scheduling cohorts.' : 'No batches match.'}
@@ -336,6 +336,14 @@ function EnrollmentModal({ batch, onClose }) {
 
   async function addStudent() {
     if (!addingId) return;
+    // batch.capacity was purely decorative before this — nothing anywhere
+    // actually stopped a batch from being enrolled past it, and the seats-
+    // left figure on the list view just clamped to 0 instead of revealing
+    // an overbooked batch.
+    if (batch.capacity != null && enrolled.length >= batch.capacity) {
+      setError(`This batch is at capacity (${batch.capacity}/${batch.capacity}). Remove a student or increase capacity first.`);
+      return;
+    }
     setBusyId(addingId);
     setError('');
     const { error: err } = await supabase.from('batch_enrollments').insert({ batch_id: batch.id, student_id: addingId });
@@ -375,7 +383,7 @@ function EnrollmentModal({ batch, onClose }) {
         </div>
 
         {loading ? (
-          <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+          <div role="status" aria-live="polite" className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
             <Loader2 size={16} className="animate-spin" /> Loading…
           </div>
         ) : (
@@ -398,7 +406,7 @@ function EnrollmentModal({ batch, onClose }) {
               </button>
             </div>
 
-            {error && <p className="text-sm text-red-500 mb-3">{error}</p>}
+            {error && <p role="alert" className="text-sm text-red-500 mb-3">{error}</p>}
 
             {enrolled.length === 0 ? (
               <p className="text-sm text-slatesoft dark:text-white/50">No students enrolled yet.</p>

@@ -204,7 +204,7 @@ export default function AdminAttendance() {
         </form>
       )}
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      {error && <p role="alert" className="text-sm text-red-500 mb-4">{error}</p>}
 
       {!batchId && <p className="text-sm text-slatesoft dark:text-white/50">Select a batch to take attendance.</p>}
       {batchId && sessions.length === 0 && !error && (
@@ -212,7 +212,7 @@ export default function AdminAttendance() {
       )}
 
       {loading && (
-        <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
           <Loader2 size={16} className="animate-spin" /> Loading roster…
         </div>
       )}

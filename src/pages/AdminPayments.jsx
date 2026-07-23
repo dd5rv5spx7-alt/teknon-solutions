@@ -167,11 +167,11 @@ export default function AdminPayments() {
       </div>
 
       {loading && (
-        <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
           <Loader2 size={16} className="animate-spin" /> Loading…
         </div>
       )}
-      {error && <p className="text-sm text-red-500">Couldn&rsquo;t load payments: {error}</p>}
+      {error && <p role="alert" className="text-sm text-red-500">Couldn&rsquo;t load payments: {error}</p>}
       {!loading && !error && filtered.length === 0 && (
         <p className="text-sm text-slatesoft dark:text-white/50">
           {payments.length === 0 ? 'No payments yet — they appear here as soon as someone starts checkout.' : 'No payments match.'}

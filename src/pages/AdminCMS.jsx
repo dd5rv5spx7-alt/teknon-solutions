@@ -137,8 +137,12 @@ function SectionEditor({ section, isAdmin }) {
     <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <p className="text-sm font-semibold text-navy dark:text-white">{section.label}</p>
-          <p className="text-xs text-slatesoft dark:text-white/50">{section.description}</p>
+          <p id={`cms-section-label-${section.key}`} className="text-sm font-semibold text-navy dark:text-white">
+            {section.label}
+          </p>
+          <p id={`cms-section-desc-${section.key}`} className="text-xs text-slatesoft dark:text-white/50">
+            {section.description}
+          </p>
         </div>
         <span
           className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-mono font-semibold ${
@@ -150,7 +154,7 @@ function SectionEditor({ section, isAdmin }) {
       </div>
 
       {loading ? (
-        <div className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
+        <div role="status" aria-live="polite" className="flex items-center gap-2 text-slatesoft dark:text-white/50 text-sm">
           <Loader2 size={16} className="animate-spin" /> Loading…
         </div>
       ) : (
@@ -161,6 +165,7 @@ function SectionEditor({ section, isAdmin }) {
             disabled={!isAdmin}
             spellCheck={false}
             rows={16}
+            aria-labelledby={`cms-section-label-${section.key} cms-section-desc-${section.key}`}
             className="w-full px-3.5 py-3 rounded-xl border border-navy/10 dark:border-white/15 bg-mist dark:bg-white/5 text-navy dark:text-white text-xs font-mono focus:border-royal/50 disabled:opacity-60 resize-y"
           />
           {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
