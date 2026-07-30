@@ -18,7 +18,7 @@ out before going live:
 
 | What | Where | Why |
 |---|---|---|
-| Contact form won't send email yet | `.env.example` → `RESEND_API_KEY` | Submits to a real `/api/enquiry` backend now (stores to Supabase + emails via Resend), but needs a free [Resend](https://resend.com) API key set in Vercel first. Until then, it automatically falls back to WhatsApp — nothing is ever lost either way. See **Section 4.5** below. |
+| Contact form & IT Solutions quote form won't send email yet | `.env.example` → `SMTP_HOST` / `SMTP_USER` / `SMTP_PASSWORD` etc. | Both forms submit to a real `/api/enquiry` backend (stores to Supabase + emails via your own Titan Mail mailbox over SMTP), but need those SMTP credentials set in Vercel first. Until then, the contact form automatically falls back to WhatsApp — nothing is ever lost either way. See **Section 4.5** below. |
 | Admin login isn't connected yet | `.env.example` → `VITE_SUPABASE_URL` etc. | Needs a free [Supabase](https://supabase.com) project — see **Section 4.5**. |
 | Social media links go nowhere (`#`) | `src/data/siteData.js` → `SOCIAL_LINKS` | Add your real Instagram/LinkedIn/GitHub/Facebook/YouTube URLs. |
 | Gallery shows labeled placeholder tiles, not real photos | `src/components/Gallery.jsx` | Intentional — swap these for real classroom/workshop/hackathon photos when you have them. I avoided using random stock photos so nothing on the site misrepresents your actual classes. |
@@ -27,7 +27,9 @@ out before going live:
 
 Everything else — pricing, program details, tech stack, FAQ, contact info — is already filled in
 from your brief and editable in **`src/data/siteData.js`**, which is written as one central file
-specifically so you (or anyone) can update content without touching component code.
+specifically so you (or anyone) can update content without touching component code. The IT
+Solutions page's service list, process steps, case studies, and FAQ live in the equivalent
+**`src/data/solutionsData.js`** — see **Section 4.12**.
 
 ---
 
@@ -44,6 +46,10 @@ npm run dev
 Then open the local URL it prints (usually `http://localhost:5173`).
 
 To build the production version yourself: `npm run build` (outputs to `dist/`).
+
+To run the automated test suite: `npm test` — currently covers the Razorpay signature-verification
+logic (`tests/razorpaySignature.test.js`), the two functions standing between a genuine payment and
+a tampered one.
 
 ---
 
@@ -140,9 +146,10 @@ already check.
 2. Once it's created: **SQL Editor** → **New query** → paste the entire contents of
    `supabase/schema.sql` from this project → **Run**. This creates the `profiles` and `enquiries`
    tables with the correct permissions.
-   > Already set Supabase up before this update? Don't re-run `schema.sql` — instead run
-   > `supabase/002_enrich_enquiries.sql`, which safely adds the new fields (college, year,
-   > source page, IP, user agent) and status options to your existing `enquiries` table.
+   > Already set Supabase up before? Don't re-run `schema.sql` — instead run every numbered file in
+   > `supabase/` you haven't run yet, **in order** (`002_enrich_enquiries.sql` through the highest
+   > number present, currently `026_it_solutions_leads.sql`). Each one is additive and idempotent —
+   > see the full list with what each does in **Section 5**.
 3. **Project Settings → API** → copy three values:
    - `Project URL` → Vercel env var `VITE_SUPABASE_URL`
    - `anon public` key → Vercel env var `VITE_SUPABASE_ANON_KEY`
@@ -317,60 +324,98 @@ needed, it reuses the same browser-print pattern certificates already use.
 
 ---
 
+## 4.12. IT Solutions page & lead pipeline
+
+The homepage now shows a "Study or Hire" chooser on every visit — one path leads into the existing
+training/enrollment funnel, the other to a new **`/it-solutions`** page for businesses wanting
+website & software development, cybersecurity consulting, penetration testing, malware analysis,
+cloud/DevOps, IT consulting, managed IT support, or staffing.
+
+- The chooser modal is deliberately shown on **every** homepage load, not just the first visit —
+  that's an intentional decision, not an oversight, made after weighing (and explicitly rejecting)
+  the usual "once per session" default. It's fully dismissible (X, Escape, backdrop click, or a
+  plain "Skip" link) with no delay, and the homepage's real content still renders underneath it
+  either way, so it doesn't behave like the kind of blocking popup search engines penalize.
+- The service list, process steps, case studies, and FAQ for that page live in
+  **`src/data/solutionsData.js`** — edit that file the same way you'd edit `siteData.js`. The case
+  studies are intentionally built from real systems in *this* codebase (the student dashboard,
+  certificate verification, the payments pipeline) rather than invented client work, and are
+  labeled "Internal build — not a client engagement" so nothing on the page misrepresents a client
+  relationship that doesn't exist yet. Swap them for real client case studies once you have some.
+- No pricing is shown on this page by design — every service ends in a **"Request a Quote"** form
+  instead, since custom software/security engagements don't fit a fixed price list the way courses
+  do.
+- The quote form submits through the **exact same `/api/enquiry` backend** as the student contact
+  form (see **Section 4.5**) — no separate setup needed. It's tagged internally as a business lead
+  (vs. a student enquiry) so the admin notification email and the record in Supabase are clearly
+  distinguishable, and a student and a business submission from the same email address won't get
+  confused with each other.
+- Requires migration `026_it_solutions_leads.sql` (see **Section 5**) if you already ran `schema.sql`
+  before this update.
+
+---
+
 ## 5. Project structure
 
 ```
 api/
   enquiry.js               ← POST endpoint: validates, stores to Supabase, emails via Titan Mail SMTP
+                              (shared by both the student contact form and the IT Solutions quote form)
   create-order.js          ← POST endpoint: creates a Razorpay order for a fixed course tier
   verify-payment.js        ← POST endpoint: verifies a Razorpay payment, stores it, emails a receipt
   razorpay-webhook.js      ← POST endpoint: reliability backstop for verify-payment + payment-failed alert
+  verify-certificate.js    ← GET endpoint: public certificate-number lookup for /verify-certificate
+  sitemap.js                ← GET /sitemap.xml — static routes + every published blog post
   health.js                ← GET /api/health — confirms what's configured, without leaking secrets
   admin/create-person.js   ← POST endpoint: admin-only, invites a new student/faculty account
   cron/daily-digest.js     ← GET endpoint, called by Vercel Cron: daily enquiries+payments summary email
   _lib/email.js            ← Titan Mail SMTP sender (nodemailer) shared by every endpoint above
   _lib/emailTemplates.js   ← shared HTML email fragments (brand header/footer, row builder)
   _lib/pricing.js          ← authoritative tier→price map, resolved server-side only
+  _lib/razorpaySignature.js ← Razorpay HMAC signature verification, unit-tested (tests/)
+  _lib/rateLimit.js         ← durable, cross-instance IP rate limiting for every public endpoint
+  _lib/gst.js                ← CGST/SGST vs. IGST split + invoice numbering logic
+  _lib/coupons.js            ← server-side coupon validation
 supabase/
-  schema.sql                ← run once in Supabase's SQL editor: profiles + enquiries tables, RLS
-  002_enrich_enquiries.sql  ← run this too if you set up Supabase before this update
-  003_people_admin.sql      ← run this too if you set up Supabase before the People admin module
-  004_student_self_service.sql ← run this too if you set up Supabase before the student portal
-  012_payments.sql          ← run this too if you set up Supabase before Razorpay payments
-  013_database_hygiene.sql  ← run this too — index/FK cleanup, certificate tamper-fix, email-change guard
-  014_rate_limiting.sql     ← run this too — durable, cross-instance rate limiting (see api/_lib/rateLimit.js)
-  015_payment_lifecycle.sql ← run this too — created/failed/refund payment states, refund tracking columns
-  016_abandoned_checkout.sql ← run this too — tracks whether an abandoned-checkout nudge was sent
-  017_coupons.sql            ← run this too — coupons table + discount tracking on payments
-  018_batches.sql            ← run this too — batch/cohort calendar + seat availability
-  019_attendance.sql         ← run this too — attendance sessions + records (admin/faculty write)
-  020_assignments.sql        ← run this too — assignments + submissions, staff-only grading guard
-  021_cms.sql                ← run this too — site_content table (FAQ & Testimonials, admin-editable)
-  022_gst_invoicing.sql      ← run this too — GSTIN/billing columns, sequential invoice numbers, student invoice access
+  schema.sql                 ← run once in Supabase's SQL editor: profiles + enquiries tables, RLS
+  002 – 026_*.sql             ← run every numbered file after schema.sql, in order, that you haven't
+                                 run yet. Highlights: 013 database hygiene, 014 rate limiting, 015–016
+                                 payment lifecycle + abandoned-checkout recovery, 017 coupons, 018–020
+                                 batches/attendance/assignments, 021 site-content CMS, 022 GST invoicing,
+                                 023 refund-ledger correctness, 024 GST billing state, 025 case-
+                                 insensitive payment email RLS, 026 IT Solutions lead fields.
 src/
-  data/siteData.js       ← almost all editable content lives here
-  components/            ← one file per section (Hero, Programs, Pricing, etc.)
-  components/admin/       ← ProtectedRoute (auth guard), AdminLayout (shared header + nav)
-  pages/                   ← MarketingSite, AdminLogin, AdminDashboard, AdminPeople
-  hooks/                 ← scroll-reveal, count-up, and typewriter animation logic
-  context/ThemeContext.jsx ← dark mode
-  context/AuthContext.jsx  ← session + role, sign in/out
-  lib/supabaseClient.js    ← the Supabase browser client
-  App.jsx                 ← routes: "/" marketing site, "/admin/login", "/admin/*" (protected, nested)
-  index.css               ← design tokens, colors, custom utility classes
-tailwind.config.js         ← brand colors/fonts (navy, royal blue, accent blue)
+  data/siteData.js         ← almost all main-site editable content lives here
+  data/solutionsData.js    ← IT Solutions page content (services, process, case studies, FAQ)
+  components/               ← one file per homepage section (Hero, Programs, Pricing, etc.)
+  components/solutions/     ← one file per IT Solutions page section
+  components/admin/          ← ProtectedRoute (auth guard), AdminLayout (shared header + nav)
+  components/ChooserModal.jsx ← the "Study or Hire" homepage chooser
+  pages/                     ← MarketingSite, ITSolutions, AdminLogin, AdminDashboard, AdminPeople, …
+  hooks/                    ← scroll-reveal, count-up, and typewriter animation logic
+  context/ThemeContext.jsx  ← dark mode
+  context/AuthContext.jsx   ← session + role, sign in/out
+  lib/supabaseClient.js     ← the Supabase browser client
+  App.jsx                  ← routes: "/" marketing site, "/it-solutions", "/admin/login",
+                               "/admin/*" and "/student/*" (protected, nested)
+  index.css                ← design tokens, brand colors/fonts, and Tailwind's own config (this
+                               project uses Tailwind v4's CSS-first `@theme` block here — there's no
+                               separate tailwind.config.js file)
+tests/
+  razorpaySignature.test.js ← unit tests for the Razorpay signature-verification logic
 ```
 
 ## 6. What wasn't included (happy to build next)
 
 As of this update: Enquiries, People, Courses, Batches, Attendance, Assignments, Certificates,
-Coupons, Payments (with refunds), Site Content (CMS, scoped to FAQ & Testimonials), Analytics, and
-the Student portal (`/student/login` → `/student`, with profile, courses, assignments, attendance,
-and certificates) are all real. Still not built: bulk-importing student accounts from a list of
-emails, WhatsApp automation via Meta's Cloud API (queued on your business verification), Downloads
-(a resource library), in-app Notifications, a general admin Settings page, a careers page, and an
-events page. GST-compliant invoicing and automated test coverage are also still open — see the
-engineering-audit artifact from your last session for the full prioritized list if you want it.
+Coupons, Payments (with refunds and GST-compliant invoicing), Site Content (CMS, scoped to FAQ &
+Testimonials), Analytics, the Student portal (`/student/login` → `/student`, with profile, courses,
+assignments, attendance, and certificates), and the IT Solutions business page + lead pipeline
+(**Section 4.12**) are all real. A test suite has also started (`npm test` — see **Section 2**),
+currently covering payment signature verification. Still not built: bulk-importing student accounts
+from a list of emails, WhatsApp automation via Meta's Cloud API (queued on your business
+verification), Downloads (a resource library), in-app Notifications, a general admin Settings page,
+a careers page, and an events page.
 
 ## 7. Performance note
 
