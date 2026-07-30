@@ -82,6 +82,10 @@ export default async function handler(req, res) {
         `${supabaseUrl}/rest/v1/enquiries?email=eq.${encodeURIComponent(clean.email)}&lead_type=eq.${encodeURIComponent(clean.lead_type)}&created_at=gte.${since}&select=id`,
         { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
       );
+      if (!dupeCheck.ok) {
+        const text = await dupeCheck.text().catch(() => '');
+        console.error('enquiry: dupe check failed', dupeCheck.status, text.slice(0, 300));
+      }
       const existing = dupeCheck.ok ? await dupeCheck.json() : [];
       if (existing.length > 0) {
         result.duplicate = true;
@@ -90,6 +94,7 @@ export default async function handler(req, res) {
       }
     } catch (err) {
       // If the dupe check itself fails, don't block a real submission over it — just proceed.
+      console.error('enquiry: dupe check threw', err);
     }
 
     // ── Store in Supabase (service_role key, server-side only, bypasses RLS by design) ──
@@ -104,7 +109,15 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify(clean),
       });
-      if (!dbRes.ok) throw new Error(`Supabase insert failed: ${dbRes.status}`);
+      if (!dbRes.ok) {
+        const text = await dbRes.text().catch(() => '');
+        // Logged, not just swallowed into a generic warning — a missing column
+        // (e.g. an unrun migration) and an auth failure (wrong service_role
+        // key) both look identical to the client otherwise, and this is the
+        // only place either one is ever surfaced.
+        console.error('enquiry: Supabase insert failed', dbRes.status, text.slice(0, 500));
+        throw new Error(`Supabase insert failed: ${dbRes.status}`);
+      }
       result.stored = true;
     } catch (err) {
       result.warnings.push('Could not store enquiry in the database.');

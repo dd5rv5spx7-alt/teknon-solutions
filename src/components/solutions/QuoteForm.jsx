@@ -2,6 +2,12 @@ import React, { useState } from 'react';
 import { Send, CheckCircle2 } from 'lucide-react';
 import SectionHeading from '../SectionHeading.jsx';
 import { SOLUTIONS_SERVICES, SOLUTIONS_TIMELINE_OPTIONS } from '../../data/solutionsData.js';
+import { CONTACT } from '../../data/siteData.js';
+
+// Mirrors Contact.jsx's fallback strategy: if /api/enquiry fails for any
+// reason (backend not configured yet, network hiccup, whatever), fall back
+// to opening WhatsApp with the same details pre-filled instead of dead-ending
+// on an error message — a business lead should never be silently lost.
 
 const initialForm = {
   name: '',
@@ -17,10 +23,35 @@ const initialForm = {
 export default function QuoteForm() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState('idle'); // idle | submitting | success | error
+  const [channel, setChannel] = useState(null); // 'api' | 'whatsapp'
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setForm((f) => ({ ...f, [name]: value }));
+  };
+
+  const buildWhatsAppMessage = (f) => {
+    const lines = [
+      `*New IT Solutions Enquiry — A Teknon Solutions*`,
+      ``,
+      `*Name:* ${f.name}`,
+      `*Phone:* ${f.phone}`,
+      `*Email:* ${f.email}`,
+      `*Company:* ${f.company}`,
+      f.service_interested ? `*Service:* ${f.service_interested}` : null,
+      f.preferred_timeline ? `*Timeline:* ${f.preferred_timeline}` : null,
+      f.message ? `*Details:* ${f.message}` : null,
+    ].filter(Boolean);
+    return lines.join('\n');
+  };
+
+  const fallbackToWhatsApp = () => {
+    const msg = buildWhatsAppMessage(form);
+    const waUrl = `https://wa.me/${CONTACT.phoneRaw}?text=${encodeURIComponent(msg)}`;
+    window.open(waUrl, '_blank', 'noopener,noreferrer');
+    setChannel('whatsapp');
+    setStatus('success');
+    setForm(initialForm);
   };
 
   const handleSubmit = async (e) => {
@@ -50,10 +81,11 @@ export default function QuoteForm() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || 'Request failed');
+      setChannel('api');
       setStatus('success');
       setForm(initialForm);
     } catch (err) {
-      setStatus('error');
+      fallbackToWhatsApp();
     }
   };
 
@@ -74,9 +106,13 @@ export default function QuoteForm() {
               <span className="w-14 h-14 grid place-items-center rounded-full bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent">
                 <CheckCircle2 size={26} />
               </span>
-              <h3 className="font-display font-bold text-xl text-navy dark:text-white">You're all set!</h3>
+              <h3 className="font-display font-bold text-xl text-navy dark:text-white">
+                {channel === 'whatsapp' ? 'WhatsApp opened with your enquiry!' : "You're all set!"}
+              </h3>
               <p className="text-slatesoft dark:text-white/60 max-w-sm">
-                Your enquiry has been sent successfully. Our team will contact you shortly.
+                {channel === 'whatsapp'
+                  ? "Your details were pre-filled in WhatsApp. Just tap Send and we'll follow up with a scoped proposal."
+                  : 'Your enquiry has been sent successfully. Our team will follow up with a scoped proposal shortly.'}
               </p>
               <button
                 type="button"
