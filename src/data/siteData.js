@@ -39,6 +39,7 @@ export const FOOTER_LINKS = [
   { label: 'Gallery', href: '#gallery' },
   { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '#contact' },
+  { label: 'IT Solutions', href: '/it-solutions' },
 ];
 
 export const STATS = [

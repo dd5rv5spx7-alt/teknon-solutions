@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Sun, Moon, GraduationCap } from 'lucide-react';
+import { Menu, X, Sun, Moon, GraduationCap, Briefcase } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { NAV_LINKS } from '../data/siteData.js';
@@ -156,6 +156,16 @@ export default function Navbar() {
           >
             <GraduationCap size={15} /> Student Login
           </Link>
+          <Link
+            to="/it-solutions"
+            className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              scrolled
+                ? 'text-navy/70 dark:text-white/60 hover:text-royal dark:hover:text-accent'
+                : 'text-white/75 hover:text-white'
+            }`}
+          >
+            <Briefcase size={15} /> IT Solutions
+          </Link>
           <a
             href="#contact"
             className="btn-glow bg-grad-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:brightness-110 transition-all"
@@ -223,6 +233,13 @@ export default function Navbar() {
             className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
           >
             <GraduationCap size={18} /> Student Login
+          </Link>
+          <Link
+            to="/it-solutions"
+            onClick={() => setMobileOpen(false)}
+            className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
+          >
+            <Briefcase size={18} /> IT Solutions
           </Link>
           <a
             href="#contact"

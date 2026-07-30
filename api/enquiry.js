@@ -32,7 +32,7 @@ export default async function handler(req, res) {
   }
 
   const body = typeof req.body === 'string' ? safeParse(req.body) : req.body || {};
-  const { name, email, phone, program, college, year, message, source, _gotcha } = body;
+  const { name, email, phone, program, college, year, message, source, company, service_interested, preferred_timeline, lead_type, _gotcha } = body;
 
   // Honeypot: a field real visitors never see or fill in (hidden via CSS on the form).
   // If it has a value, whatever submitted this isn't a human — pretend success, do nothing.
@@ -49,6 +49,9 @@ export default async function handler(req, res) {
   }
 
   const userAgent = req.headers['user-agent'] || null;
+  // Coerced, never a hard validation error — keeps the existing Contact.jsx
+  // form (which never sends lead_type) working completely unmodified.
+  const cleanLeadType = lead_type === 'business' ? 'business' : 'student';
 
   const clean = {
     name: String(name).trim().slice(0, 200),
@@ -61,6 +64,10 @@ export default async function handler(req, res) {
     source_page: source ? String(source).trim().slice(0, 200) : '/',
     ip_address: ip,
     user_agent: userAgent ? String(userAgent).slice(0, 500) : null,
+    lead_type: cleanLeadType,
+    company: company ? String(company).trim().slice(0, 200) : null,
+    service_interested: service_interested ? String(service_interested).trim().slice(0, 200) : null,
+    preferred_timeline: preferred_timeline ? String(preferred_timeline).trim().slice(0, 100) : null,
   };
 
   const supabaseUrl = process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL;
@@ -72,7 +79,7 @@ export default async function handler(req, res) {
     try {
       const since = new Date(Date.now() - DEDUPE_WINDOW_MS).toISOString();
       const dupeCheck = await fetch(
-        `${supabaseUrl}/rest/v1/enquiries?email=eq.${encodeURIComponent(clean.email)}&created_at=gte.${since}&select=id`,
+        `${supabaseUrl}/rest/v1/enquiries?email=eq.${encodeURIComponent(clean.email)}&lead_type=eq.${encodeURIComponent(clean.lead_type)}&created_at=gte.${since}&select=id`,
         { headers: { apikey: serviceKey, Authorization: `Bearer ${serviceKey}` } }
       );
       const existing = dupeCheck.ok ? await dupeCheck.json() : [];
@@ -115,7 +122,9 @@ export default async function handler(req, res) {
         // Subject lines aren't run through escapeHtml (there's no HTML to
         // escape), but embedded CR/LF could otherwise inject extra headers
         // into the outgoing email — strip them.
-        subject: `🚀 New Enquiry Received — ${clean.name.replace(/[\r\n]+/g, ' ')}`,
+        subject: clean.lead_type === 'business'
+          ? `💼 New IT Solutions Enquiry — ${clean.name.replace(/[\r\n]+/g, ' ')}`
+          : `🚀 New Enquiry Received — ${clean.name.replace(/[\r\n]+/g, ' ')}`,
         html: adminEmailHtml({ ...clean, submittedAt: now }),
       });
       await sendEmail({
@@ -144,9 +153,10 @@ export default async function handler(req, res) {
 }
 
 function adminEmailHtml(e) {
+  const isBusiness = e.lead_type === 'business';
   return internalEmailHtml({
-    emoji: '🚀',
-    title: 'New Enquiry Received',
+    emoji: isBusiness ? '💼' : '🚀',
+    title: isBusiness ? 'New IT Solutions Enquiry' : 'New Enquiry Received',
     ctaHref: ADMIN_URL,
     rows: [
       emailRow('Name', e.name),
@@ -155,6 +165,13 @@ function adminEmailHtml(e) {
       emailRow('College', e.college),
       emailRow('Year', e.year),
       emailRow('Program', e.program),
+      ...(isBusiness
+        ? [
+            emailRow('Company', e.company),
+            emailRow('Service interested', e.service_interested),
+            emailRow('Preferred timeline', e.preferred_timeline),
+          ]
+        : []),
       emailRow('Message', e.message),
       emailRow('Date', e.submittedAt.toLocaleDateString('en-IN')),
       emailRow('Time', e.submittedAt.toLocaleTimeString('en-IN')),
@@ -165,10 +182,21 @@ function adminEmailHtml(e) {
 }
 
 function studentEmailHtml(e) {
+  const isBusiness = e.lead_type === 'business';
   return customerEmailHtml({
     greetingName: e.name,
     whatsappHref: WHATSAPP_HREF,
-    bodyHtml: `
+    bodyHtml: isBusiness
+      ? `
+        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
+          Thank you for reaching out to A Teknon Solutions about IT Solutions. Our team
+          will review your requirements and follow up shortly to discuss scope and next steps.
+        </p>
+        <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
+          Meanwhile, feel free to reply to this email if you have any questions, or reach us
+          directly on WhatsApp for a faster response.
+        </p>`
+      : `
         <p style="color:#5B6B8C;font-size:14px;line-height:1.6;">
           Thank you for contacting A Teknon Solutions. We've received your enquiry
           ${e.program ? `about the <b style="color:#0B1F4D;">${escapeHtml(e.program)}</b> program` : ''}
