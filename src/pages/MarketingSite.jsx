@@ -19,6 +19,7 @@ import CTA from '../components/CTA.jsx';
 import Contact from '../components/Contact.jsx';
 import Footer from '../components/Footer.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
+import DMHomeBanner from '../components/DMHomeBanner.jsx';
 
 export default function MarketingSite() {
   const [chooserOpen, setChooserOpen] = useState(true);
@@ -37,6 +38,7 @@ export default function MarketingSite() {
       <main>
         <Hero />
         <Stats />
+        <DMHomeBanner />
         <About />
         <WhyChooseUs />
         <Programs />
