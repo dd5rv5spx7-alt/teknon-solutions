@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Sun, Moon, GraduationCap, Briefcase } from 'lucide-react';
+import { Menu, X, Sun, Moon, GraduationCap, Briefcase, Megaphone } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 import { NAV_LINKS } from '../data/siteData.js';
@@ -157,6 +157,16 @@ export default function Navbar() {
             <GraduationCap size={15} /> Student Login
           </Link>
           <Link
+            to="/digital-marketing"
+            className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+              scrolled
+                ? 'text-navy/70 dark:text-white/60 hover:text-royal dark:hover:text-accent'
+                : 'text-white/75 hover:text-white'
+            }`}
+          >
+            <Megaphone size={15} /> Digital Marketing
+          </Link>
+          <Link
             to="/it-solutions"
             className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
               scrolled
@@ -233,6 +243,13 @@ export default function Navbar() {
             className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
           >
             <GraduationCap size={18} /> Student Login
+          </Link>
+          <Link
+            to="/digital-marketing"
+            onClick={() => setMobileOpen(false)}
+            className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
+          >
+            <Megaphone size={18} /> Digital Marketing
           </Link>
           <Link
             to="/it-solutions"

@@ -8,6 +8,7 @@ const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate.jsx'));
 const BlogList = lazy(() => import('./pages/BlogList.jsx'));
 const BlogPost = lazy(() => import('./pages/BlogPost.jsx'));
 const ITSolutions = lazy(() => import('./pages/ITSolutions.jsx'));
+const DigitalMarketing = lazy(() => import('./pages/DigitalMarketing.jsx'));
 
 // AdminApp/StudentApp/ResetPasswordApp each own AuthProvider internally
 // (see src/routes/) — that's what keeps the Supabase client, and the
@@ -69,6 +70,7 @@ export default function App() {
               <Route path="/blog" element={<BlogList />} />
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/it-solutions" element={<ITSolutions />} />
+              <Route path="/digital-marketing" element={<DigitalMarketing />} />
               <Route path="/reset-password" element={<ResetPasswordApp />} />
               <Route path="/admin/*" element={<AdminApp />} />
               <Route path="/student/*" element={<StudentApp />} />

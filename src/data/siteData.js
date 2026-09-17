@@ -40,6 +40,7 @@ export const FOOTER_LINKS = [
   { label: 'Blog', href: '/blog' },
   { label: 'Contact', href: '#contact' },
   { label: 'IT Solutions', href: '/it-solutions' },
+  { label: 'Digital Marketing', href: '/digital-marketing' },
 ];
 
 export const STATS = [

@@ -12,6 +12,7 @@ const STATIC_ROUTES = [
   { path: '/blog', changefreq: 'weekly', priority: '0.8' },
   { path: '/verify-certificate', changefreq: 'monthly', priority: '0.3' },
   { path: '/it-solutions', changefreq: 'monthly', priority: '0.7' },
+  { path: '/digital-marketing', changefreq: 'weekly', priority: '0.8' },
 ];
 
 export default async function handler(req, res) {

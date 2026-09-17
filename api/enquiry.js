@@ -135,7 +135,9 @@ export default async function handler(req, res) {
         // Subject lines aren't run through escapeHtml (there's no HTML to
         // escape), but embedded CR/LF could otherwise inject extra headers
         // into the outgoing email — strip them.
-        subject: clean.lead_type === 'business'
+        subject: clean.source_page?.startsWith('/digital-marketing')
+          ? `📱 New Digital Marketing Enquiry — ${clean.name.replace(/[\r\n]+/g, ' ')}`
+          : clean.lead_type === 'business'
           ? `💼 New IT Solutions Enquiry — ${clean.name.replace(/[\r\n]+/g, ' ')}`
           : `🚀 New Enquiry Received — ${clean.name.replace(/[\r\n]+/g, ' ')}`,
         html: adminEmailHtml({ ...clean, submittedAt: now }),
@@ -167,9 +169,10 @@ export default async function handler(req, res) {
 
 function adminEmailHtml(e) {
   const isBusiness = e.lead_type === 'business';
+  const isDM = e.source_page?.startsWith('/digital-marketing');
   return internalEmailHtml({
-    emoji: isBusiness ? '💼' : '🚀',
-    title: isBusiness ? 'New IT Solutions Enquiry' : 'New Enquiry Received',
+    emoji: isDM ? '📱' : isBusiness ? '💼' : '🚀',
+    title: isDM ? 'New Digital Marketing Enquiry' : isBusiness ? 'New IT Solutions Enquiry' : 'New Enquiry Received',
     ctaHref: ADMIN_URL,
     rows: [
       emailRow('Name', e.name),
@@ -185,6 +188,7 @@ function adminEmailHtml(e) {
             emailRow('Preferred timeline', e.preferred_timeline),
           ]
         : []),
+      emailRow('Source', e.source_page),
       emailRow('Message', e.message),
       emailRow('Date', e.submittedAt.toLocaleDateString('en-IN')),
       emailRow('Time', e.submittedAt.toLocaleTimeString('en-IN')),
