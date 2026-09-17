@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { X, GraduationCap, Briefcase } from 'lucide-react';
+import { X, GraduationCap, Briefcase, Megaphone, TrendingUp } from 'lucide-react';
 
 // Matches the transition-duration below — kept in one place so the
 // setTimeout that actually unmounts the modal can't drift out of sync with
@@ -44,6 +44,11 @@ export default function ChooserModal({ onClose }) {
 
   function handleHire() {
     navigate('/it-solutions');
+    onClose();
+  }
+
+  function handleDigitalMarketing() {
+    navigate('/digital-marketing');
     onClose();
   }
 
@@ -116,7 +121,7 @@ export default function ChooserModal({ onClose }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby="chooser-modal-title"
-        className={`w-full max-w-2xl rounded-3xl bg-white dark:bg-navy-deep p-7 sm:p-8 shadow-card-lg transition-all duration-200 ease-out ${
+        className={`w-full max-w-4xl rounded-3xl bg-white dark:bg-navy-deep p-7 sm:p-8 shadow-card-lg transition-all duration-200 ease-out ${
           visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
         }`}
         onClick={(e) => e.stopPropagation()}
@@ -133,7 +138,7 @@ export default function ChooserModal({ onClose }) {
           Tell us why you&rsquo;re here, so we can point you the right way.
         </p>
 
-        <div className="grid sm:grid-cols-2 gap-4">
+        <div className="grid sm:grid-cols-3 gap-4">
           <div className="flex flex-col rounded-2xl border border-navy/10 dark:border-white/15 p-5">
             <div className="w-11 h-11 rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent mb-4">
               <GraduationCap size={20} />
@@ -149,6 +154,26 @@ export default function ChooserModal({ onClose }) {
               className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all"
             >
               Explore Programs
+            </button>
+          </div>
+
+          <div className="relative flex flex-col rounded-2xl border-2 border-royal/30 dark:border-accent/30 p-5 ring-1 ring-royal/10 dark:ring-accent/10 shadow-card">
+            <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-grad-primary text-white text-[11px] font-bold tracking-wide whitespace-nowrap">
+              <TrendingUp size={12} /> HIGH DEMAND
+            </span>
+            <div className="w-11 h-11 rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent mb-4">
+              <Megaphone size={20} />
+            </div>
+            <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to grow online</h3>
+            <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
+              Digital marketing, social media, content creation, websites &amp; branding for your business.
+            </p>
+            <button
+              type="button"
+              onClick={handleDigitalMarketing}
+              className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all"
+            >
+              Digital Marketing
             </button>
           </div>
 
