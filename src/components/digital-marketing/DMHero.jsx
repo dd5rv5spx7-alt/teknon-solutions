@@ -10,7 +10,7 @@ const METRIC_CARDS = [
 ];
 
 const TRUST_BADGES = [
-  'Social Media', 'Website Development', 'Content Creation', 'SEO & Branding', 'Lead Generation',
+  'Social Media', 'Websites', 'SEO',
 ];
 
 const BAR_DATA = [
@@ -34,7 +34,7 @@ export default function DMHero() {
         >
           {/* LEFT COLUMN */}
           <div className="flex flex-col items-start">
-            <span className="eyebrow text-accent mb-6">// Digital Growth Services</span>
+            <span className="eyebrow text-accent mb-6">DIGITAL GROWTH SERVICES</span>
             <h1 className="font-display font-extrabold text-4xl sm:text-5xl lg:text-[3.4rem] leading-[1.09] tracking-tight text-white mb-6 text-balance">
               Turn Your Business Into a{' '}
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-accent to-[#7DB8FF]">

@@ -33,21 +33,33 @@ export default function ChooserModal({ onClose }) {
   // fade/scale-out has to happen before it, not after. This modal must never
   // stall a user who wants out, so every dismissal path routes through here
   // with zero extra delay or confirmation.
+  function setSeen() {
+    try {
+      sessionStorage.setItem('ats_chooser_seen', 'true');
+    } catch {
+      // Ignore private-browsing storage quota errors
+    }
+  }
+
   function requestClose() {
+    setSeen();
     setVisible(false);
     setTimeout(onClose, TRANSITION_MS);
   }
 
   function handleLearn() {
+    setSeen();
     onClose();
   }
 
   function handleHire() {
+    setSeen();
     navigate('/it-solutions');
     onClose();
   }
 
   function handleDigitalMarketing() {
+    setSeen();
     navigate('/digital-marketing');
     onClose();
   }

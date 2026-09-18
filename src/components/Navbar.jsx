@@ -1,39 +1,67 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
-import { Menu, X, Sun, Moon, GraduationCap, Briefcase, Megaphone } from 'lucide-react';
+import { Link, useLocation } from 'react-router-dom';
+import { Menu, X, Sun, Moon, GraduationCap, ChevronDown, Sparkles, Code2, Globe, Shield, Palette } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
-import { NAV_LINKS } from '../data/siteData.js';
+
+const EDUCATION_ITEMS = [
+  { href: '/#programs', label: 'Programs', desc: 'Industry internships & career tracks', icon: GraduationCap },
+  { href: '/#courses', label: 'Courses', desc: 'Hands-on tech curriculums & training', icon: Code2 },
+  { href: '/#technologies', label: 'Technologies', desc: 'Modern stacks, frameworks & tools', icon: Sparkles },
+];
+
+const DIGITAL_SOLUTIONS_ITEMS = [
+  { to: '/digital-marketing', label: 'Digital Marketing', desc: 'Social, content & growth strategy', icon: Globe },
+  { to: '/digital-marketing#dm-webdev', label: 'Web Development', desc: 'High-speed modern websites & apps', icon: Code2 },
+  { to: '/it-solutions', label: 'IT Solutions', desc: 'Custom software & cybersecurity', icon: Shield },
+  { to: '/digital-marketing#dm-services', label: 'Branding', desc: 'Visual identity & design systems', icon: Palette },
+];
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [activeHref, setActiveHref] = useState('#home');
+  const [openDropdown, setOpenDropdown] = useState(null); // 'education' | 'digital' | null
+  const [mobileSectionOpen, setMobileSectionOpen] = useState(null); // 'education' | 'digital' | null
   const { isDark, toggleTheme } = useTheme();
+  const location = useLocation();
+
+  const navRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const menuToggleRef = useRef(null);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
+    const onScroll = () => setScrolled(window.scrollY > 20);
     onScroll();
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Highlight the nav link for whichever section is currently centered in view.
+  // Close dropdowns on outside click or escape
   useEffect(() => {
-    const sections = document.querySelectorAll('section[id]');
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) setActiveHref('#' + entry.target.id);
-        });
-      },
-      { rootMargin: '-45% 0px -50% 0px', threshold: 0 }
-    );
-    sections.forEach((s) => obs.observe(s));
-    return () => obs.disconnect();
+    function handleClickOutside(e) {
+      if (navRef.current && !navRef.current.contains(e.target)) {
+        setOpenDropdown(null);
+      }
+    }
+    function handleKeyDown(e) {
+      if (e.key === 'Escape') {
+        setOpenDropdown(null);
+        setMobileOpen(false);
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
   }, []);
+
+  // Close mobile drawer on route change
+  useEffect(() => {
+    setMobileOpen(false);
+    setOpenDropdown(null);
+  }, [location.pathname, location.hash]);
 
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
@@ -42,9 +70,7 @@ export default function Navbar() {
     };
   }, [mobileOpen]);
 
-  // Make the slide-out menu behave like the dialog it's marked as: removed
-  // from the tab order while closed, focus trapped inside while open, and
-  // closable/returns focus via Escape.
+  // Trap focus in mobile menu when open
   useEffect(() => {
     const menu = mobileMenuRef.current;
     if (!menu) return;
@@ -53,149 +79,213 @@ export default function Navbar() {
 
     const focusable = menu.querySelectorAll('a, button, [href], [tabindex]:not([tabindex="-1"])');
     focusable[0]?.focus();
-
-    function handleKeyDown(e) {
-      if (e.key === 'Escape') {
-        setMobileOpen(false);
-        menuToggleRef.current?.focus();
-        return;
-      }
-      if (e.key === 'Tab' && focusable.length > 0) {
-        const first = focusable[0];
-        const last = focusable[focusable.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [mobileOpen]);
-
-  // aria-modal="true" alone isn't reliably enough to keep a screen-reader's
-  // virtual cursor out of content behind an open dialog — inert on every
-  // sibling of the menu (main content, footer) is what actually enforces it,
-  // on top of the existing Tab-trap above.
-  useEffect(() => {
-    const siblings = document.querySelectorAll('#site-root > main, #site-root > footer, #site-root > a');
-    siblings.forEach((el) => {
-      el.inert = mobileOpen;
-    });
-    return () => {
-      siblings.forEach((el) => {
-        el.inert = false;
-      });
-    };
   }, [mobileOpen]);
 
   return (
     <header
+      ref={navRef}
       className={`fixed top-0 inset-x-0 z-50 transition-all duration-300 ${
         scrolled
-          ? 'bg-white/80 dark:bg-navy-deep/80 backdrop-blur-lg shadow-soft border-b border-navy/5 dark:border-white/5'
+          ? 'bg-white/90 dark:bg-navy-deep/90 backdrop-blur-md shadow-soft border-b border-navy/5 dark:border-white/5'
           : 'bg-transparent border-b border-transparent'
       }`}
     >
       <nav className="container-px mx-auto max-w-8xl flex items-center justify-between h-20">
-        <Logo variant={scrolled ? (isDark ? 'light' : 'dark') : 'light'} />
+        <div className="flex items-center gap-10">
+          <Logo variant={scrolled ? (isDark ? 'light' : 'dark') : 'light'} />
 
-        <div className="hidden lg:flex items-center gap-9">
-          {NAV_LINKS.map((link) => {
-            const isActive = activeHref === link.href;
-            return (
-              <a
-                key={link.href}
-                href={link.href}
-                aria-current={isActive ? 'true' : undefined}
-                className={`relative pb-1 text-sm font-medium transition-colors ${
-                  isActive
-                    ? scrolled
-                      ? 'text-royal dark:text-accent'
-                      : 'text-white'
-                    : scrolled
-                    ? 'text-navy/80 dark:text-white/75 hover:text-royal dark:hover:text-accent'
-                    : 'text-white/80 hover:text-white'
+          {/* Desktop Navigation Links */}
+          <div className="hidden lg:flex items-center gap-7">
+            <a
+              href="/#about"
+              className={`text-sm font-medium transition-colors ${
+                scrolled
+                  ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
+                  : 'text-white/85 hover:text-white'
+              }`}
+            >
+              About
+            </a>
+
+            {/* Education Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown('education')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenDropdown(openDropdown === 'education' ? null : 'education')}
+                aria-expanded={openDropdown === 'education'}
+                className={`inline-flex items-center gap-1 text-sm font-medium py-2 transition-colors ${
+                  scrolled
+                    ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
+                    : 'text-white/85 hover:text-white'
                 }`}
               >
-                {link.label}
-                <span
-                  className={`absolute left-0 -bottom-0.5 h-[2px] bg-current rounded-full transition-all duration-300 ${
-                    isActive ? 'w-full' : 'w-0'
-                  }`}
+                Education
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${openDropdown === 'education' ? 'rotate-180 text-royal dark:text-accent' : ''}`}
                 />
-              </a>
-            );
-          })}
+              </button>
+
+              {openDropdown === 'education' && (
+                <div className="absolute top-full left-0 pt-2 w-72 z-50 animate-fadeIn">
+                  <div className="rounded-2xl bg-white dark:bg-navy-deep p-3 shadow-card-lg border border-navy/10 dark:border-white/10 backdrop-blur-xl">
+                    <p className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-royal dark:text-accent font-bold">
+                      Training &amp; Careers
+                    </p>
+                    {EDUCATION_ITEMS.map((item) => (
+                      <a
+                        key={item.href}
+                        href={item.href}
+                        onClick={() => setOpenDropdown(null)}
+                        className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-mist dark:hover:bg-white/5 transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                          <item.icon size={16} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-royal dark:group-hover:text-accent transition-colors">
+                            {item.label}
+                          </p>
+                          <p className="text-xs text-slatesoft dark:text-white/50 leading-tight mt-0.5">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </a>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Digital Solutions Dropdown */}
+            <div
+              className="relative"
+              onMouseEnter={() => setOpenDropdown('digital')}
+              onMouseLeave={() => setOpenDropdown(null)}
+            >
+              <button
+                type="button"
+                onClick={() => setOpenDropdown(openDropdown === 'digital' ? null : 'digital')}
+                aria-expanded={openDropdown === 'digital'}
+                className={`inline-flex items-center gap-1 text-sm font-medium py-2 transition-colors ${
+                  scrolled
+                    ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
+                    : 'text-white/85 hover:text-white'
+                }`}
+              >
+                Digital Solutions
+                <ChevronDown
+                  size={14}
+                  className={`transition-transform duration-200 ${openDropdown === 'digital' ? 'rotate-180 text-royal dark:text-accent' : ''}`}
+                />
+              </button>
+
+              {openDropdown === 'digital' && (
+                <div className="absolute top-full left-0 pt-2 w-80 z-50 animate-fadeIn">
+                  <div className="rounded-2xl bg-white dark:bg-navy-deep p-3 shadow-card-lg border border-navy/10 dark:border-white/10 backdrop-blur-xl">
+                    <p className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-royal dark:text-accent font-bold">
+                      Business Growth
+                    </p>
+                    {DIGITAL_SOLUTIONS_ITEMS.map((item) => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        onClick={() => setOpenDropdown(null)}
+                        className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-mist dark:hover:bg-white/5 transition-colors group"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
+                          <item.icon size={16} />
+                        </div>
+                        <div>
+                          <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-royal dark:group-hover:text-accent transition-colors">
+                            {item.label}
+                          </p>
+                          <p className="text-xs text-slatesoft dark:text-white/50 leading-tight mt-0.5">
+                            {item.desc}
+                          </p>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <a
+              href="/#pricing"
+              className={`text-sm font-medium transition-colors ${
+                scrolled
+                  ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
+                  : 'text-white/85 hover:text-white'
+              }`}
+            >
+              Packages
+            </a>
+
+            <a
+              href="/#contact"
+              className={`text-sm font-medium transition-colors ${
+                scrolled
+                  ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
+                  : 'text-white/85 hover:text-white'
+              }`}
+            >
+              Contact
+            </a>
+          </div>
         </div>
 
-        <div className="hidden lg:flex items-center gap-3">
+        {/* Desktop Right Side */}
+        <div className="hidden lg:flex items-center gap-4">
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className={`w-10 h-10 grid place-items-center rounded-full border transition-colors ${
+            className={`w-9 h-9 grid place-items-center rounded-full border transition-colors ${
               scrolled
                 ? 'border-navy/10 dark:border-white/15 text-navy dark:text-white hover:border-royal/40 hover:text-royal dark:hover:text-accent'
-                : 'border-white/25 text-white/80 hover:border-white/60 hover:text-white'
+                : 'border-white/20 text-white/80 hover:border-white/50 hover:text-white'
             }`}
           >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
+
           <Link
             to="/student/login"
-            className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
+            className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-lg ${
               scrolled
-                ? 'text-navy/70 dark:text-white/60 hover:text-royal dark:hover:text-accent'
-                : 'text-white/75 hover:text-white'
+                ? 'text-navy/80 dark:text-white/70 hover:text-royal dark:hover:text-accent'
+                : 'text-white/80 hover:text-white'
             }`}
           >
-            <GraduationCap size={15} /> Student Login
+            <GraduationCap size={16} /> Student Login
           </Link>
-          <Link
-            to="/digital-marketing"
-            className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
-              scrolled
-                ? 'text-navy/70 dark:text-white/60 hover:text-royal dark:hover:text-accent'
-                : 'text-white/75 hover:text-white'
-            }`}
-          >
-            <Megaphone size={15} /> Digital Marketing
-          </Link>
-          <Link
-            to="/it-solutions"
-            className={`hidden lg:inline-flex items-center gap-1.5 text-sm font-medium transition-colors ${
-              scrolled
-                ? 'text-navy/70 dark:text-white/60 hover:text-royal dark:hover:text-accent'
-                : 'text-white/75 hover:text-white'
-            }`}
-          >
-            <Briefcase size={15} /> IT Solutions
-          </Link>
+
           <a
-            href="#contact"
-            className="btn-glow bg-grad-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:brightness-110 transition-all"
+            href="/#contact"
+            className="btn-glow bg-grad-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:brightness-110 transition-all shadow-sm"
           >
             Enroll Now
           </a>
         </div>
 
+        {/* Mobile Header Controls */}
         <div className="flex lg:hidden items-center gap-2">
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className={`w-10 h-10 grid place-items-center rounded-full border transition-colors ${
+            className={`w-9 h-9 grid place-items-center rounded-full border transition-colors ${
               scrolled
                 ? 'border-navy/10 dark:border-white/15 text-navy dark:text-white'
                 : 'border-white/25 text-white'
             }`}
           >
-            {isDark ? <Sun size={18} /> : <Moon size={18} />}
+            {isDark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
           <button
             type="button"
@@ -204,17 +294,18 @@ export default function Navbar() {
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             aria-expanded={mobileOpen}
             aria-controls="mobile-menu"
-            className={`w-10 h-10 grid place-items-center rounded-full border transition-colors ${
+            className={`w-9 h-9 grid place-items-center rounded-full border transition-colors ${
               scrolled
                 ? 'border-navy/10 dark:border-white/15 text-navy dark:text-white'
                 : 'border-white/25 text-white'
             }`}
           >
-            {mobileOpen ? <X size={20} /> : <Menu size={20} />}
+            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
           </button>
         </div>
       </nav>
 
+      {/* Mobile Menu Drawer */}
       <div
         id="mobile-menu"
         ref={mobileMenuRef}
@@ -222,51 +313,107 @@ export default function Navbar() {
         aria-modal="true"
         aria-label="Navigation menu"
         aria-hidden={!mobileOpen}
-        className={`lg:hidden fixed inset-x-0 top-20 bottom-0 bg-white dark:bg-navy-deep transition-transform duration-300 ease-out ${
+        className={`lg:hidden fixed inset-x-0 top-20 bottom-0 bg-white dark:bg-navy-deep transition-transform duration-300 ease-out overflow-y-auto ${
           mobileOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         }`}
       >
-        <div className="flex flex-col gap-1 p-6">
-          {NAV_LINKS.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={() => setMobileOpen(false)}
-              className="text-lg font-medium text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10"
+        <div className="flex flex-col p-6 space-y-3 pb-24">
+          <a
+            href="/#about"
+            onClick={() => setMobileOpen(false)}
+            className="text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
+          >
+            About
+          </a>
+
+          {/* Mobile Education Section */}
+          <div className="border-b border-navy/5 dark:border-white/10 pb-2">
+            <button
+              type="button"
+              onClick={() => setMobileSectionOpen(mobileSectionOpen === 'education' ? null : 'education')}
+              className="w-full flex items-center justify-between py-3 text-base font-semibold text-navy dark:text-white"
             >
-              {link.label}
-            </a>
-          ))}
+              <span>Education</span>
+              <ChevronDown size={16} className={`transition-transform duration-200 ${mobileSectionOpen === 'education' ? 'rotate-180' : ''}`} />
+            </button>
+            {mobileSectionOpen === 'education' && (
+              <div className="pl-4 pb-2 space-y-2">
+                {EDUCATION_ITEMS.map((item) => (
+                  <a
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setMobileOpen(false)}
+                    className="block py-2 text-sm text-slatesoft dark:text-white/70 hover:text-royal dark:hover:text-accent"
+                  >
+                    {item.label}
+                  </a>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Digital Solutions Section */}
+          <div className="border-b border-navy/5 dark:border-white/10 pb-2">
+            <button
+              type="button"
+              onClick={() => setMobileSectionOpen(mobileSectionOpen === 'digital' ? null : 'digital')}
+              className="w-full flex items-center justify-between py-3 text-base font-semibold text-navy dark:text-white"
+            >
+              <span>Digital Solutions</span>
+              <ChevronDown size={16} className={`transition-transform duration-200 ${mobileSectionOpen === 'digital' ? 'rotate-180' : ''}`} />
+            </button>
+            {mobileSectionOpen === 'digital' && (
+              <div className="pl-4 pb-2 space-y-2">
+                {DIGITAL_SOLUTIONS_ITEMS.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setMobileOpen(false)}
+                    className="block py-2 text-sm text-slatesoft dark:text-white/70 hover:text-royal dark:hover:text-accent"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <a
+            href="/#pricing"
+            onClick={() => setMobileOpen(false)}
+            className="text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
+          >
+            Packages
+          </a>
+
+          <a
+            href="/#contact"
+            onClick={() => setMobileOpen(false)}
+            className="text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
+          >
+            Contact
+          </a>
+
           <Link
             to="/student/login"
             onClick={() => setMobileOpen(false)}
-            className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
+            className="inline-flex items-center gap-2 text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
           >
             <GraduationCap size={18} /> Student Login
           </Link>
-          <Link
-            to="/digital-marketing"
-            onClick={() => setMobileOpen(false)}
-            className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
-          >
-            <Megaphone size={18} /> Digital Marketing
-          </Link>
-          <Link
-            to="/it-solutions"
-            onClick={() => setMobileOpen(false)}
-            className="inline-flex items-center gap-2 text-navy dark:text-white py-3.5 border-b border-navy/5 dark:border-white/10 text-lg font-medium"
-          >
-            <Briefcase size={18} /> IT Solutions
-          </Link>
-          <a
-            href="#contact"
-            onClick={() => setMobileOpen(false)}
-            className="mt-6 text-center bg-grad-primary text-white font-semibold px-6 py-3.5 rounded-xl"
-          >
-            Enroll Now
-          </a>
+
+          <div className="pt-4">
+            <a
+              href="/#contact"
+              onClick={() => setMobileOpen(false)}
+              className="block w-full text-center bg-grad-primary text-white font-semibold px-6 py-3.5 rounded-xl shadow-card"
+            >
+              Enroll Now
+            </a>
+          </div>
         </div>
       </div>
     </header>
   );
 }
+

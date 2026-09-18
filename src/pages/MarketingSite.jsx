@@ -22,7 +22,13 @@ import WhatsAppButton from '../components/WhatsAppButton.jsx';
 import DMHomeBanner from '../components/DMHomeBanner.jsx';
 
 export default function MarketingSite() {
-  const [chooserOpen, setChooserOpen] = useState(true);
+  const [chooserOpen, setChooserOpen] = useState(() => {
+    try {
+      return sessionStorage.getItem('ats_chooser_seen') !== 'true';
+    } catch {
+      return false;
+    }
+  });
 
   return (
     <div id="site-root" className="min-h-screen bg-white dark:bg-navy transition-colors duration-300">

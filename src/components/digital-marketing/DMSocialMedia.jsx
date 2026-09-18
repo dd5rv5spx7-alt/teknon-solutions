@@ -1,8 +1,68 @@
 import React from 'react';
-import { ArrowRight, ArrowDown } from 'lucide-react';
+import { 
+  ArrowRight, 
+  ArrowDown, 
+  Target, 
+  Calendar, 
+  Palette, 
+  Video, 
+  PenTool, 
+  Send, 
+  MessageSquare, 
+  BarChart3, 
+  RefreshCw 
+} from 'lucide-react';
 import SectionHeading from '../SectionHeading.jsx';
 import useInView from '../../hooks/useInView.js';
 import { DM_SOCIAL_WORKFLOW } from '../../data/digitalMarketingData.js';
+
+const TEAM_CAPABILITIES = [
+  {
+    icon: Target,
+    title: 'Strategy & Positioning',
+    desc: 'Audience persona research, brand voice definition, and competitive market positioning.'
+  },
+  {
+    icon: Calendar,
+    title: 'Content Calendar & Planning',
+    desc: 'Monthly thematic editorial calendars organized in advance with full client visibility.'
+  },
+  {
+    icon: Palette,
+    title: 'Graphic Design & Visuals',
+    desc: 'High-end carousel decks, infographics, brand aesthetic templates, and promotional assets.'
+  },
+  {
+    icon: Video,
+    title: 'Reels & Video Production',
+    desc: 'Scripting, hooks, editing, trending audio selection, captions, and vertical video rendering.'
+  },
+  {
+    icon: PenTool,
+    title: 'Copywriting & Captions',
+    desc: 'Conversion-driven captions, strategic hashtag clusters, and compelling calls-to-action.'
+  },
+  {
+    icon: Send,
+    title: 'Scheduling & Publishing',
+    desc: 'Peak-engagement hour scheduling across Instagram, LinkedIn, Facebook, and YouTube.'
+  },
+  {
+    icon: MessageSquare,
+    title: 'Community Management',
+    desc: 'Active monitoring, comment moderation, DM triaging, and brand reputation protection.'
+  },
+  {
+    icon: BarChart3,
+    title: 'Analytics & Reporting',
+    desc: 'Data-backed reporting covering reach, follower growth, save rates, and lead attribution.'
+  },
+  {
+    icon: RefreshCw,
+    title: 'Monthly Review & Optimization',
+    desc: 'Continuous iteration, creative fatigue analysis, and ongoing strategy refinement.'
+  }
+];
 
 export default function DMSocialMedia() {
   const [ref, isInView] = useInView();
@@ -29,6 +89,7 @@ export default function DMSocialMedia() {
         />
 
         <div ref={ref} className="mt-16">
+          {/* Workflow Row */}
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 lg:gap-8 mb-20">
             {DM_SOCIAL_WORKFLOW.map((step, idx) => (
               <React.Fragment key={idx}>
@@ -55,6 +116,42 @@ export default function DMSocialMedia() {
                 )}
               </React.Fragment>
             ))}
+          </div>
+
+          {/* 9-Part Social Media Team Breakdown */}
+          <div className="mb-20">
+            <div className="text-center max-w-2xl mx-auto mb-12">
+              <span className="eyebrow text-royal dark:text-accent">// Full-Service Team Execution</span>
+              <h3 className="font-display font-bold text-2xl sm:text-3xl text-navy dark:text-white mt-2">
+                What Our Social Media Team Delivers
+              </h3>
+              <p className="text-slatesoft dark:text-white/60 text-sm mt-2">
+                No freelancers, no disconnected contractors. A dedicated creative and analytical unit handling your brand end-to-end.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {TEAM_CAPABILITIES.map((cap, i) => {
+                const Icon = cap.icon;
+                return (
+                  <div 
+                    key={i}
+                    className={`rounded-2xl border border-navy/8 dark:border-white/10 bg-mist/50 dark:bg-navy-deep/50 p-6 hover:shadow-card hover:-translate-y-1 transition-all duration-300 reveal ${isInView ? 'in-view' : ''}`}
+                    style={{ transitionDelay: `${i * 60}ms` }}
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent mb-4">
+                      <Icon size={20} strokeWidth={2} />
+                    </div>
+                    <h4 className="font-display font-bold text-base text-navy dark:text-white mb-2">
+                      {cap.title}
+                    </h4>
+                    <p className="text-slatesoft dark:text-white/65 text-xs leading-relaxed">
+                      {cap.desc}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
           <div className={`reveal ${isInView ? 'in-view' : ''} max-w-4xl mx-auto rounded-2xl bg-navy dark:bg-navy-deep p-8 shadow-glow-lg border border-white/10`} style={{ transitionDelay: '600ms' }}>
