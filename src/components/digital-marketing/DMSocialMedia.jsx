@@ -41,7 +41,7 @@ export default function DMSocialMedia() {
                       <step.icon className="w-6 h-6" />
                     ) : null}
                   </div>
-                  <h4 className="font-display font-bold text-base text-navy dark:text-white mb-2">{step.title}</h4>
+                  <h4 className="font-display font-bold text-base text-navy dark:text-white mb-2">{step.label || step.title}</h4>
                   <p className="text-slatesoft dark:text-white/60 text-xs leading-relaxed">{step.description}</p>
                 </div>
                 {idx < DM_SOCIAL_WORKFLOW.length - 1 && (

@@ -41,7 +41,7 @@ const DMGrowthEcosystem = () => {
                     </div>
                     <div>
                       <h3 className={`font-display font-bold ${isLast ? 'text-2xl text-white' : 'text-xl text-white/90'}`}>
-                        {step.title}
+                        {step.label || step.title}
                       </h3>
                       {step.description && (
                         <p className="mt-1 text-white/70 text-sm">

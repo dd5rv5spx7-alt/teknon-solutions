@@ -6,7 +6,7 @@ import * as LucideIcons from 'lucide-react';
 
 const ProcessStep = ({ step, index }) => {
   const [ref, isInView] = useInView();
-  const Icon = LucideIcons[step.icon] || LucideIcons.Circle;
+  const Icon = typeof step.icon === 'function' ? step.icon : (LucideIcons[step.icon] || LucideIcons.Circle);
   const isEven = index % 2 === 0;
 
   return (
@@ -30,8 +30,8 @@ const ProcessStep = ({ step, index }) => {
                 {step.title}
               </h3>
             </div>
-            <p className="text-slatesoft dark:text-white/70 font-sans">
-              {step.description}
+            <p className="text-slatesoft dark:text-white/70 font-sans leading-relaxed">
+              {step.description || step.desc}
             </p>
           </div>
         )}
@@ -56,8 +56,8 @@ const ProcessStep = ({ step, index }) => {
                 {step.title}
               </h3>
             </div>
-            <p className="text-slatesoft dark:text-white/70 font-sans">
-              {step.description}
+            <p className="text-slatesoft dark:text-white/70 font-sans leading-relaxed">
+              {step.description || step.desc}
             </p>
           </div>
         </div>

@@ -1,11 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="g" x1="4" y1="4" x2="60" y2="60" gradientUnits="userSpaceOnUse">
-      <stop offset="0" stop-color="#2F80ED"/>
-      <stop offset="1" stop-color="#0B1F4D"/>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="512" y2="512" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0B1F4D"/>
+      <stop offset="100%" stop-color="#071633"/>
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F2C94C"/>
+      <stop offset="100%" stop-color="#C08C34"/>
     </linearGradient>
   </defs>
-  <rect width="64" height="64" rx="16" fill="url(#g)"/>
-  <rect x="15" y="17" width="34" height="8" rx="4" fill="#fff"/>
-  <rect x="28" y="17" width="8" height="32" rx="4" fill="#fff"/>
+  <!-- Squircle Base -->
+  <rect x="12" y="12" width="488" height="488" rx="110" fill="url(#bgGrad)" stroke="#C08C34" stroke-width="8"/>
+  <rect x="24" y="24" width="464" height="464" rx="98" fill="none" stroke="#1E5EFF" stroke-width="2" opacity="0.4"/>
+  
+  <!-- "ATS" Typography Monogram -->
+  <g font-family="Georgia, 'Times New Roman', serif" font-weight="bold" font-size="190" text-anchor="middle" dominant-baseline="central">
+    <text x="145" y="225" fill="#FFFFFF">A</text>
+    <text x="256" y="225" fill="url(#goldGrad)">T</text>
+    <text x="367" y="225" fill="#FFFFFF">S</text>
+  </g>
+  
+  <!-- Gold Accent Divider -->
+  <line x1="85" y1="330" x2="427" y2="330" stroke="url(#goldGrad)" stroke-width="5" stroke-linecap="round"/>
+  
+  <!-- Subtext "GROUP" -->
+  <text x="256" y="380" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="800" font-size="44" letter-spacing="8" fill="url(#goldGrad)" text-anchor="middle">GROUP</text>
 </svg>

@@ -12,8 +12,8 @@ const DMWhyTeknon = () => {
         <SectionHeading
           index="07"
           label="Why us"
-          title="Why Teknon Solutions?"
-          subtitle="What makes working with us different."
+          title="Why ATS Group?"
+          subtitle="Technology, creativity, and execution — all under one roof."
           align="center"
         />
 

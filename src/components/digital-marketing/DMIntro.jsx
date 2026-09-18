@@ -10,8 +10,8 @@ export default function DMIntro() {
     <section id="dm-intro" className="py-28 sm:py-32 bg-white dark:bg-navy">
       <div className="container-px mx-auto max-w-8xl">
         <SectionHeading 
-          label="Our Approach"
-          title="More Than Marketing."
+          label="Why It Matters"
+          title="Why Digital Presence Matters."
           subtitle="We bring strategy, creativity, technology and digital execution together to help businesses build a stronger online presence."
           align="center"
         />
@@ -25,13 +25,13 @@ export default function DMIntro() {
             return (
               <div 
                 key={index}
-                className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 sm:p-8 hover:shadow-card hover:-translate-y-1 transition-all duration-300"
+                className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 sm:p-7 hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col"
               >
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-6 bg-navy/5 text-royal dark:bg-white/10 dark:text-accent">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-5 bg-navy/5 text-royal dark:bg-white/10 dark:text-accent shrink-0">
                   {Icon && <Icon className="w-6 h-6" />}
                 </div>
-                <h3 className="font-display font-bold text-xl text-navy dark:text-white mb-3">
-                  {pillar.title}
+                <h3 className="font-display font-bold text-lg text-navy dark:text-white mb-2">
+                  {pillar.label || pillar.title}
                 </h3>
                 <p className="text-navy-light/70 dark:text-white/60 text-sm leading-relaxed">
                   {pillar.description}
