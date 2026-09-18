@@ -11,6 +11,7 @@ import DMSocialMedia from '../components/digital-marketing/DMSocialMedia.jsx';
 import DMInstagram from '../components/digital-marketing/DMInstagram.jsx';
 import DMContent from '../components/digital-marketing/DMContent.jsx';
 import DMWebDev from '../components/digital-marketing/DMWebDev.jsx';
+import DMSeoGoogle from '../components/digital-marketing/DMSeoGoogle.jsx';
 import DMGrowthEcosystem from '../components/digital-marketing/DMGrowthEcosystem.jsx';
 import DMPackages from '../components/digital-marketing/DMPackages.jsx';
 import DMWhyTeknon from '../components/digital-marketing/DMWhyTeknon.jsx';
@@ -63,6 +64,7 @@ export default function DigitalMarketing() {
         <DMInstagram />
         <DMContent />
         <DMWebDev />
+        <DMSeoGoogle />
         <DMGrowthEcosystem />
         <DMPackages />
         <DMWhyTeknon />

@@ -12,7 +12,7 @@ export default function Gallery() {
         <SectionHeading
           index="09"
           label="Gallery"
-          title="Life at A Teknon Solutions"
+          title="Life at Teknon Solutions"
           subtitle="Classroom sessions, workshops, hackathons and the moments in between."
         />
 
@@ -22,19 +22,17 @@ export default function Gallery() {
             return (
               <div
                 key={cat.label}
-                className={`reveal ${isInView ? 'in-view' : ''} reveal-delay-${(i % 6) + 1} group relative aspect-[4/3] rounded-2xl overflow-hidden`}
+                className={`reveal ${isInView ? 'in-view' : ''} reveal-delay-${(i % 6) + 1} group relative aspect-[4/3] rounded-2xl overflow-hidden bg-gradient-to-br from-navy to-royal/80`}
               >
                 <img
                   src={cat.image}
-                  // These are grid tiles, not full-width hero images — a
-                  // phone in a 2-column layout never needs the full 800px
-                  // asset. Unsplash's imaging API resizes on the fly from
-                  // the same &w= param already in cat.image, so a 480w
-                  // variant is just a URL swap, not a second asset to manage.
                   srcSet={`${cat.image.replace('w=800', 'w=480')} 480w, ${cat.image} 800w`}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   alt={cat.alt}
                   loading="lazy"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                   className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                 />
                 <div
