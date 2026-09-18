@@ -14,7 +14,7 @@ export default function Seo({
   description,
   path = '/',
   image = DEFAULT_IMAGE,
-  imageAlt = 'A Teknon Solutions — Learn. Build. Grow. IT Internships & Training in Rajahmundry',
+  imageAlt = 'ATS Group of Companies — Technology, Digital Marketing & IT Education',
   ogTitle,
   ogDescription,
   noindex = false,
@@ -44,7 +44,7 @@ export default function Seo({
       <meta property="og:title" content={ogTitle || title} />
       <meta property="og:description" content={ogDescription || description} />
       <meta property="og:url" content={url} />
-      <meta property="og:site_name" content="A Teknon Solutions" />
+      <meta property="og:site_name" content="ATS Group of Companies" />
       <meta property="og:locale" content="en_IN" />
       <meta property="og:image" content={image} />
       <meta property="og:image:alt" content={imageAlt} />

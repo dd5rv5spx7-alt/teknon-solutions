@@ -4,5 +4,9 @@ Disallow: /admin
 Disallow: /admin/
 Disallow: /student
 Disallow: /student/
+Disallow: /dashboard
+Disallow: /dashboard/
+Disallow: /reset-password
+Disallow: /api/
 
 Sitemap: https://www.ateknonsolutions.com/sitemap.xml

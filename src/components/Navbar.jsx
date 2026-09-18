@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Menu, X, Sun, Moon, GraduationCap, ChevronDown, Sparkles, Code2, Globe, Shield, Palette } from 'lucide-react';
+import { Menu, X, Sun, Moon, GraduationCap, ChevronDown, Sparkles, Code2, Globe, Shield, Palette, Briefcase } from 'lucide-react';
 import Logo from './Logo.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
@@ -8,6 +8,7 @@ const EDUCATION_ITEMS = [
   { href: '/#programs', label: 'Programs', desc: 'Industry internships & career tracks', icon: GraduationCap },
   { href: '/#courses', label: 'Courses', desc: 'Hands-on tech curriculums & training', icon: Code2 },
   { href: '/#technologies', label: 'Technologies', desc: 'Modern stacks, frameworks & tools', icon: Sparkles },
+  { href: '/#pricing', label: 'Internships', desc: 'Practical summer & winter internships', icon: Briefcase },
 ];
 
 const DIGITAL_SOLUTIONS_ITEMS = [
