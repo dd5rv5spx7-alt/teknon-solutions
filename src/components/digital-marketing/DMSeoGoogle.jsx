@@ -157,7 +157,7 @@ export default function DMSeoGoogle() {
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="px-2 py-0.5 rounded bg-royal text-white text-[10px] font-bold font-mono">#1 RESULT</span>
+                    <span className="px-2 py-0.5 rounded bg-royal text-white text-[10px] font-bold font-mono">LOCAL 3-PACK RESULT</span>
                     <h5 className="font-display font-bold text-lg sm:text-xl text-navy dark:text-white">
                       ATS Group of Companies — Digital & IT Solutions
                     </h5>

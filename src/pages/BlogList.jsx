@@ -87,12 +87,23 @@ export default function BlogList() {
                 className="group rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] overflow-hidden hover:border-royal/30 hover:-translate-y-1 transition-all duration-300"
               >
                 {p.featured_image ? (
-                  <img
-                    src={p.featured_image}
-                    alt={p.title}
-                    loading="lazy"
-                    className="w-full aspect-[16/9] object-cover"
-                  />
+                  <div className="w-full aspect-[16/9] relative overflow-hidden bg-grad-navy">
+                    <img
+                      src={p.featured_image}
+                      alt={p.title}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.currentTarget.classList.add('hidden');
+                        if (e.currentTarget.nextElementSibling) {
+                          e.currentTarget.nextElementSibling.classList.remove('hidden');
+                        }
+                      }}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="hidden absolute inset-0 bg-grad-navy grid place-items-center">
+                      <Newspaper size={28} className="text-white/30" />
+                    </div>
+                  </div>
                 ) : (
                   <div className="w-full aspect-[16/9] bg-grad-navy grid place-items-center">
                     <Newspaper size={28} className="text-white/30" />

@@ -21,20 +21,20 @@
          never run Helmet, so a shared blog-post link still shows this
          fallback rather than the post's own card — fixing that needs
          server-side tag injection or prerendering, out of scope here. -->
-    <title>A Teknon Solutions | IT Internship &amp; Training Institute, Rajahmundry</title>
-    <meta name="keywords" content="IT Training Institute, Internship Programs, Software Training, Python Training, Java Training, React Training, Full Stack Course, Cybersecurity Training, AI Training, Online Internship, Offline Internship, Rajahmundry Training Institute, Best Internship Institute, Coding Institute, Tech Training" />
-    <meta name="author" content="A Teknon Solutions" />
+    <title>ATS Group of Companies | Technology, Digital Marketing &amp; IT Education</title>
+    <meta name="keywords" content="ATS Group of Companies, Teknon Solutions, ATS Digital Solutions, Digital Marketing Agency Rajahmundry, Website Development, SEO Services, Social Media Marketing, IT Training Institute, Software Internships, Rajahmundry" />
+    <meta name="author" content="ATS Group of Companies" />
 
-    <!-- Structured Data: Organization + EducationalOrganization -->
+    <!-- Structured Data: Organization + EducationalOrganization + LocalBusiness -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@graph": [
         {
-          "@type": ["Organization", "EducationalOrganization"],
+          "@type": "Organization",
           "@id": "https://www.ateknonsolutions.com/#organization",
-          "name": "A Teknon Solutions",
-          "alternateName": "A Teknon Solutions IT Training",
+          "name": "ATS Group of Companies",
+          "alternateName": ["Teknon Solutions", "ATS Digital Solutions"],
           "url": "https://www.ateknonsolutions.com/",
           "logo": {
             "@type": "ImageObject",
@@ -43,7 +43,7 @@
             "height": 64
           },
           "image": "https://www.ateknonsolutions.com/og-image.png",
-          "description": "A Teknon Solutions is an IT education and training provider in Rajahmundry, Andhra Pradesh. We offer industry-oriented internships, live projects, expert mentorship, and career-focused training in Python, Full Stack, Java, AI, Cybersecurity, and more.",
+          "description": "ATS Group of Companies provides modern technology architecture, performance digital marketing, website development, and industry-grade IT education and internships through Teknon Solutions in Rajahmundry, Andhra Pradesh.",
           "foundingDate": "2024",
           "founder": {
             "@type": "Person",
@@ -52,7 +52,7 @@
           "contactPoint": {
             "@type": "ContactPoint",
             "telephone": "+91-8897571616",
-            "contactType": "admissions",
+            "contactType": "customer service",
             "areaServed": "IN",
             "availableLanguage": ["English", "Telugu"]
           },
@@ -61,8 +61,23 @@
             "addressLocality": "Rajahmundry",
             "addressRegion": "Andhra Pradesh",
             "addressCountry": "IN"
+          }
+        },
+        {
+          "@type": "EducationalOrganization",
+          "@id": "https://www.ateknonsolutions.com/#education",
+          "name": "Teknon Solutions",
+          "parentOrganization": {
+            "@id": "https://www.ateknonsolutions.com/#organization"
           },
-          "sameAs": [],
+          "url": "https://www.ateknonsolutions.com/",
+          "description": "Teknon Solutions is the education and training division of ATS Group of Companies, offering industry-oriented internships and software engineering programs.",
+          "address": {
+            "@type": "PostalAddress",
+            "addressLocality": "Rajahmundry",
+            "addressRegion": "Andhra Pradesh",
+            "addressCountry": "IN"
+          },
           "hasOfferCatalog": {
             "@type": "OfferCatalog",
             "name": "IT Internship Programs",
@@ -109,7 +124,8 @@
         {
           "@type": "LocalBusiness",
           "@id": "https://www.ateknonsolutions.com/#localbusiness",
-          "name": "A Teknon Solutions",
+          "name": "ATS Group of Companies",
+          "alternateName": "Teknon Solutions",
           "url": "https://www.ateknonsolutions.com/",
           "telephone": "+91-8897571616",
           "address": {

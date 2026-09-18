@@ -163,6 +163,9 @@ export default function BlogPost() {
                   // eagerly rather than lazily.
                   loading="eager"
                   fetchPriority="high"
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
                   className="w-full aspect-[16/9] object-cover rounded-2xl mb-8"
                 />
               )}

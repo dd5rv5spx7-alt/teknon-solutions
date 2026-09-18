@@ -18,44 +18,71 @@ const DMWebDev = () => {
           align="left"
         />
 
-        <div ref={ref} className={`mt-16 grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 reveal ${isInView ? 'in-view' : ''}`}>
-          
-          {/* Left Column: Types */}
-          <div className="space-y-6">
-            <h3 className="font-display font-bold text-2xl text-navy dark:text-white">What We Build</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {DM_WEBSITE_TYPES.map((type, idx) => (
-                <div key={idx} className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 shadow-sm hover:shadow-card hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-xl bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent shrink-0">
-                      <type.icon size={18} strokeWidth={2} />
+        {/* ── 6 Full-Width Website Types Cards ─────────────── */}
+        <div ref={ref} className={`mt-16 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 reveal ${isInView ? 'in-view' : ''}`}>
+          {DM_WEBSITE_TYPES.map((type, idx) => {
+            const Icon = type.icon;
+            const number = String(idx + 1).padStart(2, '0');
+            const badges = [
+              'Enterprise Trust & Structure',
+              'Local Lead Generation',
+              'High-Converting Single Page',
+              'Catalogue & Payment Ready',
+              'Visual Impact Showcase',
+              'Bespoke Business Workflows'
+            ];
+            return (
+              <div 
+                key={idx} 
+                className="group rounded-3xl border border-navy/10 dark:border-white/10 bg-white dark:bg-white/[0.04] p-7 shadow-sm hover:shadow-card-lg hover:border-royal/30 dark:hover:border-accent/30 hover:-translate-y-1 transition-all duration-300 flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between mb-5">
+                    <div className="w-12 h-12 rounded-2xl bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent group-hover:scale-110 transition-transform">
+                      <Icon size={22} strokeWidth={2} />
                     </div>
-                    <span className="text-royal/50 dark:text-accent/50 font-mono font-bold text-sm">{String(idx + 1).padStart(2, '0')}</span>
+                    <span className="text-royal/60 dark:text-accent/60 font-mono font-extrabold text-base bg-navy/5 dark:bg-white/10 px-3 py-1 rounded-full">
+                      {number}
+                    </span>
                   </div>
-                  <div>
-                    <h4 className="font-display font-bold text-navy dark:text-white text-base">{type.title}</h4>
-                    <p className="mt-1 text-sm text-slatesoft dark:text-white/60 leading-relaxed">{type.description}</p>
-                  </div>
+                  <h3 className="font-display font-bold text-xl text-navy dark:text-white mb-2.5 group-hover:text-royal dark:group-hover:text-accent transition-colors">
+                    {type.title}
+                  </h3>
+                  <p className="text-sm text-slatesoft dark:text-white/65 leading-relaxed">
+                    {type.description}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
 
-          {/* Right Column: Highlights */}
-          <div className="space-y-6">
-            <h3 className="font-display font-bold text-2xl text-navy dark:text-white">Our Standards</h3>
-            <div className="grid grid-cols-2 gap-4">
+                <div className="mt-6 pt-4 border-t border-navy/5 dark:border-white/5 flex items-center justify-between">
+                  <span className="text-xs font-mono text-slatesoft/80 dark:text-white/50">
+                    {badges[idx]}
+                  </span>
+                  <ArrowRight size={14} className="text-royal dark:text-accent opacity-0 group-hover:opacity-100 group-hover:translate-x-1 transition-all" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* ── Our Standards Ribbon ─────────────── */}
+        <div className={`mt-14 reveal ${isInView ? 'in-view' : ''}`}>
+          <div className="rounded-2xl border border-navy/8 dark:border-white/10 bg-white/70 dark:bg-white/[0.02] p-6 backdrop-blur-sm">
+            <p className="text-center text-xs font-mono uppercase tracking-widest text-slatesoft dark:text-white/50 mb-5 font-semibold">
+              // Built Into Every Website We Deploy
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4">
               {DM_WEBSITE_HIGHLIGHTS.map((highlight, idx) => (
-                <div key={idx} className="rounded-xl border border-navy/5 dark:border-white/5 bg-white/50 dark:bg-white/[0.02] p-5 flex flex-col items-center text-center gap-3 transition-colors hover:bg-white dark:hover:bg-white/[0.04]">
-                  <div className="w-10 h-10 rounded-full bg-navy/5 dark:bg-white/10 flex items-center justify-center text-royal dark:text-accent">
-                    <highlight.icon size={20} strokeWidth={2} />
+                <div key={idx} className="flex flex-col items-center text-center gap-2 p-3 rounded-xl hover:bg-white dark:hover:bg-white/5 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-royal/10 dark:bg-accent/15 flex items-center justify-center text-royal dark:text-accent shrink-0">
+                    <highlight.icon size={18} strokeWidth={2} />
                   </div>
-                  <span className="font-medium text-navy dark:text-white text-sm">{highlight.label}</span>
+                  <span className="text-xs font-semibold text-navy dark:text-white leading-tight">
+                    {highlight.label}
+                  </span>
                 </div>
               ))}
             </div>
           </div>
-
         </div>
 
         {/* ── Desktop & Mobile Responsive Preview Showcase ─────────────── */}
