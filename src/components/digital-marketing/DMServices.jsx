@@ -23,17 +23,15 @@ export default function DMServices() {
         >
           {DM_SERVICES.map((service, idx) => {
             return (
-              <div 
-                key={idx} 
-                className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 sm:p-8 hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col items-start"
+              <div
+                key={idx}
+                className="w-full md:w-[calc(50%-12px)] lg:w-[calc(33.333%-16px)] rounded-2xl border border-navy/8 dark:border-white/10 bg-white dark:bg-white/[0.04] p-6 sm:p-7 hover:shadow-card hover:-translate-y-1 transition-all duration-300 flex flex-col items-start"
               >
-                <div className="w-12 h-12 rounded-xl bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent mb-6">
-                  {service.icon && typeof service.icon !== 'string' ? (
-                    <service.icon className="w-6 h-6" />
-                  ) : null}
+                <div className="w-12 h-12 rounded-xl bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent mb-5">
+                  {service.icon && <service.icon size={22} strokeWidth={1.8} />}
                 </div>
-                <h3 className="font-display font-bold text-lg text-navy dark:text-white mb-3">
-                  {service.title}
+                <h3 className="font-display font-bold text-base text-navy dark:text-white mb-2">
+                  {service.name}
                 </h3>
                 <p className="text-slatesoft dark:text-white/60 text-sm leading-relaxed">
                   {service.description}

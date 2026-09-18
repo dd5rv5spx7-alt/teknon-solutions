@@ -128,14 +128,14 @@ export default function ChooserModal({ onClose }) {
       >
         <div className="flex items-start justify-between gap-4 mb-2">
           <h2 id="chooser-modal-title" className="font-display font-bold text-xl sm:text-2xl text-navy dark:text-white">
-            Welcome to A Teknon Solutions
+            Welcome to ATS Group of Companies
           </h2>
           <button onClick={requestClose} aria-label="Close" className="shrink-0 text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white">
             <X size={18} />
           </button>
         </div>
         <p className="text-sm text-slatesoft dark:text-white/60 mb-6">
-          Tell us why you&rsquo;re here, so we can point you the right way.
+          Tell us why you&rsquo;re here, so we can point you in the right direction.
         </p>
 
         <div className="grid sm:grid-cols-3 gap-4">
@@ -145,7 +145,7 @@ export default function ChooserModal({ onClose }) {
             </div>
             <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to learn</h3>
             <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
-              IT internships, training programs, and certification courses.
+              IT internships, training programs and technology courses.
             </p>
             <button
               type="button"
@@ -157,7 +157,7 @@ export default function ChooserModal({ onClose }) {
             </button>
           </div>
 
-          <div className="relative flex flex-col rounded-2xl border-2 border-royal/30 dark:border-accent/30 p-5 ring-1 ring-royal/10 dark:ring-accent/10 shadow-card">
+          <div className="relative flex flex-col rounded-2xl border border-royal/25 dark:border-accent/25 p-5 bg-royal/[0.03] dark:bg-accent/[0.04] ring-1 ring-royal/10 dark:ring-accent/10 shadow-card">
             <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-grad-primary text-white text-[11px] font-bold tracking-wide whitespace-nowrap">
               <TrendingUp size={12} /> HIGH DEMAND
             </span>
@@ -166,7 +166,7 @@ export default function ChooserModal({ onClose }) {
             </div>
             <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to grow online</h3>
             <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
-              Digital marketing, social media, content creation, websites &amp; branding for your business.
+              Digital marketing, social media, content creation, websites and branding for your business.
             </p>
             <button
               type="button"
@@ -183,8 +183,7 @@ export default function ChooserModal({ onClose }) {
             </div>
             <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to hire</h3>
             <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
-              Website &amp; software development, cybersecurity, cloud/DevOps, and more — for your
-              business.
+              Web development, software solutions, cybersecurity, cloud/DevOps and technology services for your business.
             </p>
             <button
               type="button"

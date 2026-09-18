@@ -102,7 +102,7 @@ export default function Navbar() {
       }`}
     >
       <nav className="container-px mx-auto max-w-8xl flex items-center justify-between h-20">
-        <Logo variant={scrolled ? 'dark' : 'light'} />
+        <Logo variant={scrolled ? (isDark ? 'light' : 'dark') : 'light'} />
 
         <div className="hidden lg:flex items-center gap-9">
           {NAV_LINKS.map((link) => {

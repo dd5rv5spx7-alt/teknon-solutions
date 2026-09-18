@@ -3,6 +3,7 @@ import {
   BarChart3, Palette, Target, TrendingUp, Users, Lightbulb,
   Zap, Shield, HeartHandshake, Layers, ArrowUpRight,
   Calendar, Eye, MessageSquare, Smartphone, Share2,
+  Building2, Store, LayoutTemplate, ShoppingCart, UserSquare, Wrench,
 } from 'lucide-react';
 
 // ── Services ──────────────────────────────────────────────────────────────
@@ -146,25 +147,25 @@ export const DM_PROCESS_STEPS = [
 // ── Social Media Workflow ─────────────────────────────────────────────────
 
 export const DM_SOCIAL_WORKFLOW = [
-  { label: 'Strategy', icon: Lightbulb },
-  { label: 'Content Plan', icon: Calendar },
-  { label: 'Design', icon: Palette },
-  { label: 'Publish', icon: ArrowUpRight },
-  { label: 'Engage', icon: MessageSquare },
-  { label: 'Analyse', icon: BarChart3 },
-  { label: 'Optimise', icon: TrendingUp },
+  { label: 'Strategy', icon: Lightbulb, description: 'Audience & competitor research defining brand voice, positioning and targets.' },
+  { label: 'Content Plan', icon: Calendar, description: 'Structured monthly editorial calendars aligned with business priorities.' },
+  { label: 'Design', icon: Palette, description: 'Scroll-stopping visual assets, high-converting carousels and promotional graphics.' },
+  { label: 'Publish', icon: ArrowUpRight, description: 'Peak-time scheduling with hashtag architecture and engaging captions.' },
+  { label: 'Engage', icon: MessageSquare, description: 'Community response, DM routing, conversation sparking and audience nurturing.' },
+  { label: 'Analyse', icon: BarChart3, description: 'Transparent reporting on reach, impressions, interactions and profile visits.' },
+  { label: 'Optimise', icon: TrendingUp, description: 'Iterative adjustments to creative and scheduling to compound growth over time.' },
 ];
 
 // ── Growth Ecosystem ──────────────────────────────────────────────────────
 
 export const DM_GROWTH_ECOSYSTEM = [
-  { label: 'Brand', icon: Palette },
-  { label: 'Website', icon: Globe },
-  { label: 'Social Media', icon: Smartphone },
-  { label: 'Content', icon: PenTool },
-  { label: 'Marketing', icon: Megaphone },
-  { label: 'Leads', icon: Target },
-  { label: 'Growth', icon: TrendingUp },
+  { label: 'Brand', icon: Palette, description: 'Distinct identity, logo standards, typography and consistent aesthetic foundation.' },
+  { label: 'Website', icon: Globe, description: 'Fast, conversion-focused digital headquarters turning traffic into qualified prospects.' },
+  { label: 'Social Media', icon: Smartphone, description: 'Active community engagement and organic audience building across key platforms.' },
+  { label: 'Content', icon: PenTool, description: 'High-value posts, carousels, and reels establishing authority and brand affinity.' },
+  { label: 'Marketing', icon: Megaphone, description: 'Targeted campaigns and local search optimization expanding your reach.' },
+  { label: 'Leads', icon: Target, description: 'Automated WhatsApp routing and enquiry captures converting interest to pipeline.' },
+  { label: 'Growth', icon: TrendingUp, description: 'Compounding brand equity, recurring revenue and measurable market leadership.' },
 ];
 
 // ── Instagram Features ────────────────────────────────────────────────────
@@ -181,12 +182,36 @@ export const DM_INSTAGRAM_FEATURES = [
 // ── Website Types ─────────────────────────────────────────────────────────
 
 export const DM_WEBSITE_TYPES = [
-  'Corporate Websites',
-  'Business Websites',
-  'Landing Pages',
-  'Portfolio Websites',
-  'E-commerce Websites',
-  'Service Websites',
+  {
+    icon: Building2,
+    title: 'Corporate Websites',
+    description: 'Professional multi-page sites for established businesses — structured for trust, credibility, and lead capture.',
+  },
+  {
+    icon: Store,
+    title: 'Business Websites',
+    description: 'Clean, conversion-focused websites for local and regional businesses looking to grow their online presence.',
+  },
+  {
+    icon: LayoutTemplate,
+    title: 'Landing Pages',
+    description: 'High-converting single-page experiences built specifically to turn visitors into enquiries or customers.',
+  },
+  {
+    icon: ShoppingCart,
+    title: 'E-commerce Websites',
+    description: 'Product-ready online stores with catalogue management, payments, and a seamless buying experience.',
+  },
+  {
+    icon: UserSquare,
+    title: 'Portfolio Websites',
+    description: 'Elegant showcases for professionals, agencies, and creatives to display their work with impact.',
+  },
+  {
+    icon: Wrench,
+    title: 'Custom Web Applications',
+    description: 'Bespoke web-based tools and dashboards built to exact business requirements and workflows.',
+  },
 ];
 
 export const DM_WEBSITE_HIGHLIGHTS = [
@@ -307,10 +332,11 @@ export const DM_TIMELINE_OPTIONS = [
 // ── SEO ───────────────────────────────────────────────────────────────────
 
 export const DM_SEO = {
-  title: 'Digital Marketing & Growth Services | A Teknon Solutions',
+  title: 'Digital Marketing & Growth Services | ATS Group of Companies',
   description:
-    'Build a stronger online presence with social media management, Instagram marketing, content creation, website development, SEO, branding, and digital marketing services from A Teknon Solutions, Rajahmundry.',
-  ogTitle: 'A Teknon Solutions — Digital Marketing & Digital Growth Services',
+    'Build a stronger online presence with social media management, Instagram marketing, content creation, website development, SEO, branding, and digital marketing services from ATS Group of Companies, Rajahmundry.',
+  ogTitle: 'ATS Group of Companies — Digital Marketing & Digital Growth Services',
   ogDescription:
-    'Social media, content, websites, branding, and digital marketing — all under one team. Build your digital presence with A Teknon Solutions.',
+    'Social media, content, websites, branding, and digital marketing — all under one team. Build your digital presence with ATS Group of Companies.',
 };
+
