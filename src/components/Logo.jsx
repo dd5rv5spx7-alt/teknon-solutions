@@ -21,7 +21,7 @@ export default function Logo({ variant = 'dark', size = 'md', className = '', to
       alt="ATS Group of Companies"
       width={width}
       height={height}
-      className="block h-auto max-h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
+      className="block h-auto max-h-9 sm:max-h-12 w-auto object-contain transition-transform duration-300 group-hover:scale-105"
     />
   );
 

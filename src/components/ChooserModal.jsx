@@ -115,105 +115,151 @@ export default function ChooserModal({ onClose }) {
   }, []);
 
   useEffect(() => {
+    const prevBodyOverflow = document.body.style.overflow;
+    const prevHtmlOverflow = document.documentElement.style.overflow;
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = prevBodyOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
     };
   }, []);
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[999] flex items-center justify-center bg-black/50 p-4 transition-opacity duration-200 ease-out ${
+      className={`fixed inset-0 z-[999] flex items-center justify-center p-3 sm:p-4 bg-navy-deep/80 dark:bg-black/85 backdrop-blur-sm overflow-hidden touch-none transition-opacity duration-200 ease-out ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
       onClick={requestClose}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) e.preventDefault();
+      }}
     >
       <div
         ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="chooser-modal-title"
-        className={`w-full max-w-4xl rounded-3xl bg-white dark:bg-navy-deep p-7 sm:p-8 shadow-card-lg transition-all duration-200 ease-out ${
+        className={`relative flex flex-col w-full max-w-[calc(100vw-24px)] sm:max-w-xl md:max-w-2xl max-h-[88dvh] max-h-[88vh] rounded-2xl sm:rounded-3xl bg-white dark:bg-navy-deep border border-navy/10 dark:border-white/10 shadow-2xl overflow-hidden transition-all duration-200 ease-out box-border min-w-0 ${
           visible ? 'opacity-100 scale-100' : 'opacity-0 scale-95'
         }`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4 mb-2">
-          <h2 id="chooser-modal-title" className="font-display font-bold text-xl sm:text-2xl text-navy dark:text-white">
-            Welcome to ATS Group of Companies
-          </h2>
-          <button onClick={requestClose} aria-label="Close" className="shrink-0 text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white">
-            <X size={18} />
+        {/* Sticky Header — ALWAYS Visible & Never Scrolls */}
+        <div className="shrink-0 p-3.5 sm:p-5 border-b border-navy/5 dark:border-white/10 bg-white dark:bg-navy-deep z-10 flex items-start justify-between gap-2.5">
+          <div className="min-w-0 flex-1">
+            <h2
+              id="chooser-modal-title"
+              className="font-display font-extrabold uppercase tracking-tight text-xs sm:text-base md:text-lg text-navy dark:text-white leading-tight"
+            >
+              Welcome to ATS Group of Companies
+            </h2>
+            <p className="text-[11px] sm:text-xs md:text-sm text-slatesoft dark:text-white/70 mt-1 leading-normal">
+              Tell us why you&rsquo;re here, so we can point you in the right direction.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={requestClose}
+            aria-label="Close dialog"
+            className="shrink-0 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-navy/5 dark:bg-white/10 flex items-center justify-center text-navy/70 dark:text-white/70 hover:text-navy dark:hover:text-white hover:bg-navy/10 dark:hover:bg-white/15 transition-colors focus-visible:ring-2 focus-visible:ring-royal"
+          >
+            <X size={15} />
           </button>
         </div>
-        <p className="text-sm text-slatesoft dark:text-white/60 mb-6">
-          Tell us why you&rsquo;re here, so we can point you in the right direction.
-        </p>
 
-        <div className="grid sm:grid-cols-3 gap-4">
-          <div className="flex flex-col rounded-2xl border border-navy/10 dark:border-white/15 p-5">
-            <div className="w-11 h-11 rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent mb-4">
-              <GraduationCap size={20} />
+        {/* Scrollable Card Content Area — Only this area scrolls if viewport is small */}
+        <div className="flex-1 overflow-y-auto overscroll-contain p-3 sm:p-5 space-y-2 sm:space-y-0 sm:grid sm:grid-cols-3 sm:gap-3.5 touch-pan-y min-w-0">
+          {/* Card 1: Learn */}
+          <div className="min-w-0 flex flex-col justify-between rounded-xl sm:rounded-2xl border border-navy/10 dark:border-white/15 p-3 sm:p-4 bg-navy/[0.01] dark:bg-white/[0.02] hover:border-royal/30 transition-all">
+            <div>
+              <div className="flex items-center gap-2 sm:block sm:mb-2.5">
+                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent shrink-0">
+                  <GraduationCap size={16} className="sm:w-5 sm:h-5" />
+                </div>
+                <h3 className="font-display font-bold uppercase tracking-wider text-xs sm:text-sm text-navy dark:text-white truncate">
+                  I Want to Learn
+                </h3>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slatesoft dark:text-white/65 mt-1 sm:mt-1.5 mb-2.5 sm:mb-4 leading-relaxed">
+                IT internships, training programs and technology courses.
+              </p>
             </div>
-            <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to learn</h3>
-            <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
-              IT internships, training programs and technology courses.
-            </p>
             <button
               type="button"
               ref={initialFocusRef}
               onClick={handleLearn}
-              className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all"
+              className="btn-glow w-full bg-grad-primary text-white font-semibold py-1.5 sm:py-2 px-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm hover:brightness-110 transition-all text-center tracking-wide"
             >
               Explore Programs
             </button>
           </div>
 
-          <div className="relative flex flex-col rounded-2xl border border-royal/25 dark:border-accent/25 p-5 bg-royal/[0.03] dark:bg-accent/[0.04] ring-1 ring-royal/10 dark:ring-accent/10 shadow-card">
-            <span className="absolute -top-3 left-1/2 -translate-x-1/2 inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-grad-primary text-white text-[11px] font-bold tracking-wide whitespace-nowrap">
-              <TrendingUp size={12} /> HIGH DEMAND
-            </span>
-            <div className="w-11 h-11 rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent mb-4">
-              <Megaphone size={20} />
+          {/* Card 2: Grow Online */}
+          <div className="min-w-0 relative flex flex-col justify-between rounded-xl sm:rounded-2xl border border-royal/30 dark:border-accent/35 p-3 sm:p-4 bg-royal/[0.03] dark:bg-accent/[0.04] ring-1 ring-royal/15 dark:ring-accent/20 hover:border-royal/50 transition-all">
+            <div>
+              <div className="flex items-center justify-between gap-1.5 mb-1 sm:mb-2.5">
+                <div className="flex items-center gap-2 min-w-0">
+                  <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent shrink-0">
+                    <Megaphone size={16} className="sm:w-5 sm:h-5" />
+                  </div>
+                  <h3 className="font-display font-bold uppercase tracking-wider text-xs sm:text-sm text-navy dark:text-white truncate">
+                    I Want to Grow Online
+                  </h3>
+                </div>
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-grad-primary text-white text-[9px] font-bold tracking-wider uppercase shadow-sm whitespace-nowrap shrink-0">
+                  <TrendingUp size={9} /> High Demand
+                </span>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slatesoft dark:text-white/65 mt-1 sm:mt-1.5 mb-2.5 sm:mb-4 leading-relaxed">
+                Digital marketing, social media, content creation, websites &amp; branding.
+              </p>
             </div>
-            <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to grow online</h3>
-            <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
-              Digital marketing, social media, content creation, websites and branding for your business.
-            </p>
             <button
               type="button"
               onClick={handleDigitalMarketing}
-              className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3 rounded-xl hover:brightness-110 transition-all"
+              className="btn-glow w-full bg-grad-primary text-white font-semibold py-1.5 sm:py-2 px-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm hover:brightness-110 transition-all text-center tracking-wide"
             >
               Digital Marketing
             </button>
           </div>
 
-          <div className="flex flex-col rounded-2xl border border-navy/10 dark:border-white/15 p-5">
-            <div className="w-11 h-11 rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent mb-4">
-              <Briefcase size={20} />
+          {/* Card 3: Hire */}
+          <div className="min-w-0 flex flex-col justify-between rounded-xl sm:rounded-2xl border border-navy/10 dark:border-white/15 p-3 sm:p-4 bg-navy/[0.01] dark:bg-white/[0.02] hover:border-royal/30 transition-all">
+            <div>
+              <div className="flex items-center gap-2 sm:block sm:mb-2.5">
+                <div className="w-7 h-7 sm:w-9 sm:h-9 rounded-lg sm:rounded-xl grid place-items-center bg-royal/10 dark:bg-accent/15 text-royal dark:text-accent shrink-0">
+                  <Briefcase size={16} className="sm:w-5 sm:h-5" />
+                </div>
+                <h3 className="font-display font-bold uppercase tracking-wider text-xs sm:text-sm text-navy dark:text-white truncate">
+                  I Want to Hire
+                </h3>
+              </div>
+              <p className="text-[11px] sm:text-xs text-slatesoft dark:text-white/65 mt-1 sm:mt-1.5 mb-2.5 sm:mb-4 leading-relaxed">
+                Web development, IT solutions, cybersecurity and technology services.
+              </p>
             </div>
-            <h3 className="font-display font-semibold text-navy dark:text-white mb-1.5">I want to hire</h3>
-            <p className="text-sm text-slatesoft dark:text-white/60 mb-5 grow">
-              Web development, software solutions, cybersecurity, cloud/DevOps and technology services for your business.
-            </p>
             <button
               type="button"
               onClick={handleHire}
-              className="w-full border border-navy/15 dark:border-white/20 text-navy dark:text-white font-semibold px-6 py-3 rounded-xl hover:border-royal/40 dark:hover:border-accent/40 hover:text-royal dark:hover:text-accent transition-colors"
+              className="w-full border border-navy/15 dark:border-white/20 text-navy dark:text-white font-semibold py-1.5 sm:py-2 px-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm hover:border-royal/40 dark:hover:border-accent/40 hover:text-royal dark:hover:text-accent transition-colors text-center tracking-wide"
             >
               View IT Solutions
             </button>
           </div>
         </div>
 
-        <button
-          type="button"
-          onClick={requestClose}
-          className="block mx-auto mt-6 text-sm font-medium text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white transition-colors"
-        >
-          Skip — I&rsquo;ll look around
-        </button>
+        {/* Sticky Footer — ALWAYS Accessible */}
+        <div className="shrink-0 p-2.5 sm:p-3.5 border-t border-navy/5 dark:border-white/10 bg-white dark:bg-navy-deep text-center z-10">
+          <button
+            type="button"
+            onClick={requestClose}
+            className="inline-block text-xs sm:text-sm font-medium text-slatesoft dark:text-white/50 hover:text-navy dark:hover:text-white transition-colors py-1 px-3 rounded-lg"
+          >
+            Skip — I&rsquo;ll look around
+          </button>
+        </div>
       </div>
     </div>,
     document.body
