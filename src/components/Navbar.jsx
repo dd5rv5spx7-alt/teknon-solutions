@@ -338,13 +338,18 @@ export default function Navbar() {
               <ChevronDown size={16} className={`transition-transform duration-200 ${mobileSectionOpen === 'education' ? 'rotate-180' : ''}`} />
             </button>
             {mobileSectionOpen === 'education' && (
-              <div className="pl-4 pb-2 space-y-2">
-                {EDUCATION_ITEMS.map((item) => (
+              <div className="pl-4 pb-2 space-y-1">
+                {[
+                  { href: '/#programs', label: 'Programs' },
+                  { href: '/#courses', label: 'Courses' },
+                  { href: '/#technologies', label: 'Technologies' },
+                  { href: '/#pricing', label: 'Internships' }
+                ].map((item) => (
                   <a
                     key={item.href}
                     href={item.href}
                     onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-sm text-slatesoft dark:text-white/70 hover:text-royal dark:hover:text-accent"
+                    className="block py-2 text-sm font-medium text-slatesoft dark:text-white/70 hover:text-royal dark:hover:text-accent"
                   >
                     {item.label}
                   </a>
@@ -364,13 +369,17 @@ export default function Navbar() {
               <ChevronDown size={16} className={`transition-transform duration-200 ${mobileSectionOpen === 'digital' ? 'rotate-180' : ''}`} />
             </button>
             {mobileSectionOpen === 'digital' && (
-              <div className="pl-4 pb-2 space-y-2">
-                {DIGITAL_SOLUTIONS_ITEMS.map((item) => (
+              <div className="pl-4 pb-2 space-y-1">
+                {[
+                  { to: '/digital-marketing', label: 'Digital Marketing' },
+                  { to: '/digital-marketing#dm-webdev', label: 'Web Development' },
+                  { to: '/it-solutions', label: 'IT Solutions' }
+                ].map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
                     onClick={() => setMobileOpen(false)}
-                    className="block py-2 text-sm text-slatesoft dark:text-white/70 hover:text-royal dark:hover:text-accent"
+                    className="block py-2 text-sm font-medium text-slatesoft dark:text-white/70 hover:text-royal dark:hover:text-accent"
                   >
                     {item.label}
                   </Link>
