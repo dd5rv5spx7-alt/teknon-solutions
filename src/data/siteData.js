@@ -24,6 +24,8 @@ export const SOCIAL_LINKS = [
 
 export const NAV_LINKS = [
   { label: 'About', href: '#about' },
+  { label: 'Experience', href: '#experience' },
+  { label: 'Education', href: '#education' },
   { label: 'Programs', href: '#programs' },
   { label: 'Courses', href: '#courses' },
   { label: 'Technologies', href: '#technologies' },
@@ -34,6 +36,8 @@ export const NAV_LINKS = [
 export const FOOTER_LINKS = [
   { label: 'Home', href: '#home' },
   { label: 'About', href: '#about' },
+  { label: 'Experience & Leadership', href: '#experience' },
+  { label: 'Education', href: '#education' },
   { label: 'Programs', href: '#programs' },
   { label: 'Courses', href: '#courses' },
   { label: 'Gallery', href: '#gallery' },

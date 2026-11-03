@@ -5,7 +5,8 @@ import Logo from './Logo.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 const EDUCATION_ITEMS = [
-  { href: '/#programs', label: 'Programs', desc: 'Industry internships & career tracks', icon: GraduationCap },
+  { href: '/#education', label: 'Academic Background', desc: 'SRM University AP & Qualifications', icon: GraduationCap },
+  { href: '/#programs', label: 'Programs', desc: 'Industry internships & career tracks', icon: Briefcase },
   { href: '/#courses', label: 'Courses', desc: 'Hands-on tech curriculums & training', icon: Code2 },
   { href: '/#technologies', label: 'Technologies', desc: 'Modern stacks, frameworks & tools', icon: Sparkles },
   { href: '/#pricing', label: 'Internships', desc: 'Practical summer & winter internships', icon: Briefcase },
@@ -106,6 +107,17 @@ export default function Navbar() {
               }`}
             >
               About
+            </a>
+
+            <a
+              href="/#experience"
+              className={`text-sm font-medium transition-colors ${
+                scrolled
+                  ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
+                  : 'text-white/85 hover:text-white'
+              }`}
+            >
+              Experience
             </a>
 
             {/* Education Dropdown */}
@@ -327,6 +339,14 @@ export default function Navbar() {
             About
           </a>
 
+          <a
+            href="/#experience"
+            onClick={() => setMobileOpen(false)}
+            className="text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
+          >
+            Experience &amp; Leadership
+          </a>
+
           {/* Mobile Education Section */}
           <div className="border-b border-navy/5 dark:border-white/10 pb-2">
             <button
@@ -340,6 +360,7 @@ export default function Navbar() {
             {mobileSectionOpen === 'education' && (
               <div className="pl-4 pb-2 space-y-1">
                 {[
+                  { href: '/#education', label: 'Academic Background' },
                   { href: '/#programs', label: 'Programs' },
                   { href: '/#courses', label: 'Courses' },
                   { href: '/#technologies', label: 'Technologies' },
