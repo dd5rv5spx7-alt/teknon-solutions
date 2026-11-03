@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
 import { ThemeProvider } from './context/ThemeContext.jsx';
+import ScrollToAnchor from './components/ScrollToAnchor.jsx';
 import MarketingSite from './pages/MarketingSite.jsx';
 
 const VerifyCertificate = lazy(() => import('./pages/VerifyCertificate.jsx'));
@@ -9,6 +10,7 @@ const BlogList = lazy(() => import('./pages/BlogList.jsx'));
 const BlogPost = lazy(() => import('./pages/BlogPost.jsx'));
 const ITSolutions = lazy(() => import('./pages/ITSolutions.jsx'));
 const DigitalMarketing = lazy(() => import('./pages/DigitalMarketing.jsx'));
+const PortfolioPage = lazy(() => import('./pages/PortfolioPage.jsx'));
 
 // AdminApp/StudentApp/ResetPasswordApp each own AuthProvider internally
 // (see src/routes/) — that's what keeps the Supabase client, and the
@@ -62,6 +64,7 @@ export default function App() {
     <HelmetProvider>
       <ThemeProvider>
         <BrowserRouter>
+          <ScrollToAnchor />
           <SkipToContent />
           <Suspense fallback={<RouteFallback />}>
             <Routes>
@@ -71,6 +74,8 @@ export default function App() {
               <Route path="/blog/:slug" element={<BlogPost />} />
               <Route path="/it-solutions" element={<ITSolutions />} />
               <Route path="/digital-marketing" element={<DigitalMarketing />} />
+              <Route path="/experience" element={<PortfolioPage />} />
+              <Route path="/portfolio" element={<PortfolioPage />} />
               <Route path="/reset-password" element={<ResetPasswordApp />} />
               <Route path="/admin/*" element={<AdminApp />} />
               <Route path="/student/*" element={<StudentApp />} />
