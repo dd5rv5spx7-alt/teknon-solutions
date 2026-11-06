@@ -20,8 +20,6 @@ import Contact from '../components/Contact.jsx';
 import Footer from '../components/Footer.jsx';
 import WhatsAppButton from '../components/WhatsAppButton.jsx';
 import DMHomeBanner from '../components/DMHomeBanner.jsx';
-import Experience from '../components/Experience.jsx';
-import Education from '../components/Education.jsx';
 
 export default function MarketingSite() {
   const [chooserOpen, setChooserOpen] = useState(() => {
@@ -48,8 +46,6 @@ export default function MarketingSite() {
         <Stats />
         <DMHomeBanner />
         <About />
-        <Experience />
-        <Education />
         <WhyChooseUs />
         <Programs />
         <Technologies />

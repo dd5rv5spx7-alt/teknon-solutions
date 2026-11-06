@@ -5,8 +5,7 @@ import Logo from './Logo.jsx';
 import { useTheme } from '../context/ThemeContext.jsx';
 
 const EDUCATION_ITEMS = [
-  { href: '/#education', label: 'Academic Background', desc: 'SRM University AP & Qualifications', icon: GraduationCap },
-  { href: '/#programs', label: 'Programs', desc: 'Industry internships & career tracks', icon: Briefcase },
+  { href: '/#programs', label: 'Programs', desc: 'Industry internships & career tracks', icon: GraduationCap },
   { href: '/#courses', label: 'Courses', desc: 'Hands-on tech curriculums & training', icon: Code2 },
   { href: '/#technologies', label: 'Technologies', desc: 'Modern stacks, frameworks & tools', icon: Sparkles },
   { href: '/#pricing', label: 'Internships', desc: 'Practical summer & winter internships', icon: Briefcase },
@@ -109,17 +108,6 @@ export default function Navbar() {
               About
             </a>
 
-            <a
-              href="/#experience"
-              className={`text-sm font-medium transition-colors ${
-                scrolled
-                  ? 'text-navy/80 dark:text-white/80 hover:text-royal dark:hover:text-accent'
-                  : 'text-white/85 hover:text-white'
-              }`}
-            >
-              Experience
-            </a>
-
             {/* Education Dropdown */}
             <div
               className="relative"
@@ -156,16 +144,12 @@ export default function Navbar() {
                         onClick={() => setOpenDropdown(null)}
                         className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-mist dark:hover:bg-white/5 transition-colors group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                          <item.icon size={16} />
-                        </div>
+                        <item.icon className="w-5 h-5 mt-0.5 text-royal dark:text-accent group-hover:scale-110 transition-transform" />
                         <div>
                           <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-royal dark:group-hover:text-accent transition-colors">
                             {item.label}
                           </p>
-                          <p className="text-xs text-slatesoft dark:text-white/50 leading-tight mt-0.5">
-                            {item.desc}
-                          </p>
+                          <p className="text-xs text-slatesoft dark:text-white/50">{item.desc}</p>
                         </div>
                       </a>
                     ))}
@@ -198,10 +182,10 @@ export default function Navbar() {
               </button>
 
               {openDropdown === 'digital' && (
-                <div className="absolute top-full left-0 pt-2 w-80 z-50 animate-fadeIn">
+                <div className="absolute top-full left-0 pt-2 w-72 z-50 animate-fadeIn">
                   <div className="rounded-2xl bg-white dark:bg-navy-deep p-3 shadow-card-lg border border-navy/10 dark:border-white/10 backdrop-blur-xl">
                     <p className="px-3 py-1.5 text-[10px] font-mono uppercase tracking-wider text-royal dark:text-accent font-bold">
-                      Business Growth
+                      Enterprise Services
                     </p>
                     {DIGITAL_SOLUTIONS_ITEMS.map((item) => (
                       <Link
@@ -210,16 +194,12 @@ export default function Navbar() {
                         onClick={() => setOpenDropdown(null)}
                         className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-mist dark:hover:bg-white/5 transition-colors group"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-royal/10 dark:bg-accent/15 grid place-items-center text-royal dark:text-accent shrink-0 mt-0.5 group-hover:scale-105 transition-transform">
-                          <item.icon size={16} />
-                        </div>
+                        <item.icon className="w-5 h-5 mt-0.5 text-royal dark:text-accent group-hover:scale-110 transition-transform" />
                         <div>
                           <p className="text-sm font-semibold text-navy dark:text-white group-hover:text-royal dark:group-hover:text-accent transition-colors">
                             {item.label}
                           </p>
-                          <p className="text-xs text-slatesoft dark:text-white/50 leading-tight mt-0.5">
-                            {item.desc}
-                          </p>
+                          <p className="text-xs text-slatesoft dark:text-white/50">{item.desc}</p>
                         </div>
                       </Link>
                     ))}
@@ -252,82 +232,61 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Desktop Right Side */}
-        <div className="hidden lg:flex items-center gap-4">
+        {/* Right Action Icons & Buttons */}
+        <div className="flex items-center gap-3 sm:gap-4">
           <button
             type="button"
             onClick={toggleTheme}
             aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className={`w-9 h-9 grid place-items-center rounded-full border transition-colors ${
+            className={`w-10 h-10 rounded-xl grid place-items-center transition-colors ${
               scrolled
-                ? 'border-navy/10 dark:border-white/15 text-navy dark:text-white hover:border-royal/40 hover:text-royal dark:hover:text-accent'
-                : 'border-white/20 text-white/80 hover:border-white/50 hover:text-white'
+                ? 'text-navy/70 dark:text-white/70 hover:bg-mist dark:hover:bg-white/5'
+                : 'text-white/80 hover:bg-white/10'
             }`}
           >
-            {isDark ? <Sun size={17} /> : <Moon size={17} />}
+            {isDark ? <Sun size={18} /> : <Moon size={18} />}
           </button>
 
           <Link
             to="/student/login"
-            className={`inline-flex items-center gap-1.5 text-sm font-medium transition-colors px-3 py-2 rounded-lg ${
+            className={`hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold tracking-wide transition-colors ${
               scrolled
-                ? 'text-navy/80 dark:text-white/70 hover:text-royal dark:hover:text-accent'
-                : 'text-white/80 hover:text-white'
+                ? 'text-navy dark:text-white hover:bg-mist dark:hover:bg-white/5 border border-navy/10 dark:border-white/10'
+                : 'text-white bg-white/10 hover:bg-white/15 backdrop-blur-sm border border-white/15'
             }`}
           >
-            <GraduationCap size={16} /> Student Login
+            <GraduationCap size={15} /> Student Login
           </Link>
 
           <a
             href="/#contact"
-            className="btn-glow bg-grad-primary text-white text-sm font-semibold px-6 py-2.5 rounded-xl hover:brightness-110 transition-all shadow-sm"
+            className="hidden sm:inline-flex items-center gap-2 bg-grad-primary text-white text-xs font-semibold px-5 py-2.5 rounded-xl shadow-card hover:brightness-110 active:scale-[0.98] transition-all"
           >
             Enroll Now
           </a>
-        </div>
 
-        {/* Mobile Header Controls */}
-        <div className="flex lg:hidden items-center gap-2">
+          {/* Mobile hamburger */}
           <button
-            type="button"
-            onClick={toggleTheme}
-            aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-            className={`w-9 h-9 grid place-items-center rounded-full border transition-colors ${
-              scrolled
-                ? 'border-navy/10 dark:border-white/15 text-navy dark:text-white'
-                : 'border-white/25 text-white'
-            }`}
-          >
-            {isDark ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
-          <button
-            type="button"
             ref={menuToggleRef}
-            onClick={() => setMobileOpen((v) => !v)}
+            type="button"
+            onClick={() => setMobileOpen(!mobileOpen)}
             aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
-            aria-expanded={mobileOpen}
-            aria-controls="mobile-menu"
-            className={`w-9 h-9 grid place-items-center rounded-full border transition-colors ${
+            className={`lg:hidden w-10 h-10 rounded-xl grid place-items-center transition-colors ${
               scrolled
-                ? 'border-navy/10 dark:border-white/15 text-navy dark:text-white'
-                : 'border-white/25 text-white'
+                ? 'text-navy dark:text-white hover:bg-mist dark:hover:bg-white/5'
+                : 'text-white hover:bg-white/10'
             }`}
           >
-            {mobileOpen ? <X size={18} /> : <Menu size={18} />}
+            {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
         </div>
       </nav>
 
       {/* Mobile Menu Drawer */}
       <div
-        id="mobile-menu"
         ref={mobileMenuRef}
-        role="dialog"
-        aria-modal="true"
-        aria-label="Navigation menu"
-        aria-hidden={!mobileOpen}
-        className={`lg:hidden fixed inset-x-0 top-20 bottom-0 bg-white dark:bg-navy-deep transition-transform duration-300 ease-out overflow-y-auto ${
-          mobileOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
+        className={`lg:hidden fixed inset-x-0 top-20 bottom-0 bg-white dark:bg-navy-deep border-t border-navy/10 dark:border-white/10 overflow-y-auto transition-all duration-300 ${
+          mobileOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
         }`}
       >
         <div className="flex flex-col p-6 space-y-3 pb-24">
@@ -337,14 +296,6 @@ export default function Navbar() {
             className="text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
           >
             About
-          </a>
-
-          <a
-            href="/#experience"
-            onClick={() => setMobileOpen(false)}
-            className="text-base font-semibold text-navy dark:text-white py-3 border-b border-navy/5 dark:border-white/10"
-          >
-            Experience &amp; Leadership
           </a>
 
           {/* Mobile Education Section */}
@@ -359,13 +310,7 @@ export default function Navbar() {
             </button>
             {mobileSectionOpen === 'education' && (
               <div className="pl-4 pb-2 space-y-1">
-                {[
-                  { href: '/#education', label: 'Academic Background' },
-                  { href: '/#programs', label: 'Programs' },
-                  { href: '/#courses', label: 'Courses' },
-                  { href: '/#technologies', label: 'Technologies' },
-                  { href: '/#pricing', label: 'Internships' }
-                ].map((item) => (
+                {EDUCATION_ITEMS.map((item) => (
                   <a
                     key={item.href}
                     href={item.href}
@@ -391,11 +336,7 @@ export default function Navbar() {
             </button>
             {mobileSectionOpen === 'digital' && (
               <div className="pl-4 pb-2 space-y-1">
-                {[
-                  { to: '/digital-marketing', label: 'Digital Marketing' },
-                  { to: '/digital-marketing#dm-webdev', label: 'Web Development' },
-                  { to: '/it-solutions', label: 'IT Solutions' }
-                ].map((item) => (
+                {DIGITAL_SOLUTIONS_ITEMS.map((item) => (
                   <Link
                     key={item.to}
                     to={item.to}
@@ -447,4 +388,3 @@ export default function Navbar() {
     </header>
   );
 }
-
