@@ -34,7 +34,19 @@ export function AuthProvider({ children }) {
   const latestUserId = useRef(null);
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) {
+      try {
+        const stored = sessionStorage.getItem('ats_demo_user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          setSession(parsed.session);
+          setRole(parsed.role);
+          setStatus(parsed.status || 'active');
+        }
+      } catch {}
+      setLoading(false);
+      return;
+    }
 
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -67,7 +79,25 @@ export function AuthProvider({ children }) {
 
   async function signIn(email, password) {
     if (!isSupabaseConfigured) {
-      return { error: 'Supabase is not configured yet — see .env.example.' };
+      // Interactive Demo Mode: Allow previewing and managing without database lockout
+      const isAdmin = String(email).toLowerCase().includes('admin');
+      const userRole = isAdmin ? 'admin' : 'student';
+      const demoSession = {
+        user: {
+          id: isAdmin ? 'usr-admin-001' : 'usr-student-001',
+          email: email || (isAdmin ? 'admin@ateknonsolutions.com' : 'student@ateknonsolutions.com'),
+        },
+      };
+      setSession(demoSession);
+      setRole(userRole);
+      setStatus('active');
+      try {
+        sessionStorage.setItem(
+          'ats_demo_user',
+          JSON.stringify({ session: demoSession, role: userRole, status: 'active' })
+        );
+      } catch {}
+      return { error: null, role: userRole };
     }
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) return { error: mapAuthError(error.message) };
@@ -79,7 +109,15 @@ export function AuthProvider({ children }) {
   }
 
   async function signOut() {
-    if (!isSupabaseConfigured) return;
+    if (!isSupabaseConfigured) {
+      try {
+        sessionStorage.removeItem('ats_demo_user');
+      } catch {}
+      setSession(null);
+      setRole(null);
+      setStatus(null);
+      return;
+    }
     await supabase.auth.signOut();
   }
 

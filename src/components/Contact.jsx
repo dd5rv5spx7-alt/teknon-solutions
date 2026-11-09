@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Phone, MapPin, MessageCircle, Send, Clock, CheckCircle2 } from 'lucide-react';
+import { Phone, MapPin, MessageCircle, Send, Clock, CheckCircle2, ExternalLink, Navigation } from 'lucide-react';
 import SectionHeading from './SectionHeading.jsx';
 import { CONTACT, PROGRAMS } from '../data/siteData.js';
 
@@ -68,7 +68,6 @@ export default function Contact() {
   };
 
   const whatsappHref = `https://wa.me/${CONTACT.phoneRaw}?text=${encodeURIComponent(CONTACT.whatsappMessage)}`;
-  const mapSrc = `https://maps.google.com/maps?q=${encodeURIComponent(CONTACT.location)}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
 
   return (
     <section id="contact" className="py-28 sm:py-32 bg-mist dark:bg-navy-deep">
@@ -130,15 +129,53 @@ export default function Contact() {
               </span>
             </div>
 
-            <div className="rounded-2xl overflow-hidden border border-navy/8 dark:border-white/10 h-56">
-              <iframe
-                title="A Teknon Solutions location"
-                src={mapSrc}
-                className="w-full h-full grayscale-[30%]"
-                style={{ border: 0 }}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
+            {/* Stylized Campus Location & Map Card (Replaces fragile iframe) */}
+            <div className="relative rounded-2xl overflow-hidden border border-navy/10 dark:border-white/10 bg-gradient-to-br from-navy via-navy-deep to-navy p-5 text-white shadow-soft">
+              <div className="absolute inset-0 bg-dot-grid opacity-30 pointer-events-none" aria-hidden="true" />
+              <div className="relative z-10 flex flex-col justify-between h-full min-h-[170px]">
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-center gap-3">
+                    <div className="relative flex items-center justify-center">
+                      <span className="absolute w-6 h-6 rounded-full bg-accent/40 animate-ping" />
+                      <span className="w-9 h-9 rounded-xl bg-accent text-white grid place-items-center shadow-glow-sm">
+                        <MapPin size={18} />
+                      </span>
+                    </div>
+                    <div>
+                      <h4 className="font-display font-bold text-sm text-white">Rajahmundry Campus &amp; HQ</h4>
+                      <p className="text-xs text-white/60 font-mono mt-0.5">17.0005° N, 81.8040° E &bull; Andhra Pradesh</p>
+                    </div>
+                  </div>
+                  <span className="px-2 py-0.5 rounded-full bg-white/10 text-white/70 font-mono text-[10px] uppercase tracking-wide shrink-0">
+                    Main Center
+                  </span>
+                </div>
+
+                <p className="text-xs text-white/70 leading-relaxed my-3">
+                  In-person practical labs, offline batches, and executive training headquarters in Rajahmundry.
+                </p>
+
+                <div className="pt-2 flex items-center gap-2">
+                  <a
+                    href="https://www.google.com/maps/search/?api=1&query=Rajahmundry+Andhra+Pradesh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-white/10 hover:bg-white/15 text-white text-xs font-semibold border border-white/10 transition-colors"
+                  >
+                    <span>Open in Maps</span>
+                    <ExternalLink size={12} />
+                  </a>
+                  <a
+                    href="https://www.google.com/maps/dir/?api=1&destination=Rajahmundry+Andhra+Pradesh"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-grad-primary hover:brightness-110 text-white text-xs font-semibold shadow-glow-sm transition-all"
+                  >
+                    <span>Get Directions</span>
+                    <Navigation size={12} />
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
 

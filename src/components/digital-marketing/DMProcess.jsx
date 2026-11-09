@@ -2,11 +2,11 @@ import React from 'react';
 import SectionHeading from '../SectionHeading';
 import useInView from '../../hooks/useInView';
 import { DM_PROCESS_STEPS } from '../../data/digitalMarketingData';
-import * as LucideIcons from 'lucide-react';
+import { Circle } from 'lucide-react';
 
 const ProcessStep = ({ step, index }) => {
   const [ref, isInView] = useInView();
-  const Icon = typeof step.icon === 'function' ? step.icon : (LucideIcons[step.icon] || LucideIcons.Circle);
+  const Icon = typeof step.icon === 'function' ? step.icon : Circle;
   const isEven = index % 2 === 0;
 
   return (

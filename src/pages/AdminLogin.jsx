@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { Lock, AlertCircle } from 'lucide-react';
+import { Lock, AlertCircle, Sparkles } from 'lucide-react';
 import Logo from '../components/Logo.jsx';
 import ForgotPassword from '../components/ForgotPassword.jsx';
 import PasswordField from '../components/PasswordField.jsx';
@@ -8,7 +8,7 @@ import Seo from '../components/Seo.jsx';
 import { useAuth } from '../context/AuthContext.jsx';
 
 export default function AdminLogin() {
-  const { signIn, isAuthenticated, loading, isSupabaseConfigured } = useAuth();
+  const { signIn, isAuthenticated, role, loading, isSupabaseConfigured } = useAuth();
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +26,9 @@ export default function AdminLogin() {
       </div>
     );
   }
-  if (isAuthenticated) return <Navigate to="/admin" replace />;
+  if (isAuthenticated && (role === 'admin' || role === 'faculty')) {
+    return <Navigate to="/admin" replace />;
+  }
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,12 +75,32 @@ export default function AdminLogin() {
           <p className="mt-1.5 text-sm text-white/55">Admin and faculty accounts only.</p>
 
           {!isSupabaseConfigured && (
-            <div className="mt-5 flex gap-2.5 rounded-xl border border-amber-400/30 bg-amber-400/10 p-3.5 text-sm text-amber-200">
-              <AlertCircle size={16} className="shrink-0 mt-0.5" />
-              <span>
-                Login isn&rsquo;t connected yet — Supabase credentials are missing from this
-                deployment&rsquo;s environment variables. See <code>.env.example</code>.
-              </span>
+            <div className="mt-5 rounded-xl border border-royal/30 bg-royal/10 p-3.5 text-xs text-white/80">
+              <div className="flex items-center justify-between mb-1">
+                <span className="font-semibold text-accent flex items-center gap-1.5">
+                  <Sparkles size={13} /> Interactive Admin Preview
+                </span>
+                <span className="px-2 py-0.5 rounded bg-royal/20 text-accent font-mono text-[10px]">Staff Ready</span>
+              </div>
+              <p className="text-white/65 leading-relaxed">
+                Supabase credentials not configured in local environment. Click below to enter demo admin console with 1 click.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  setEmail('admin@ateknonsolutions.com');
+                  setPassword('admin1234');
+                  setSubmitting(true);
+                  const res = await signIn('admin@ateknonsolutions.com', 'admin1234');
+                  setSubmitting(false);
+                  if (!res.error) {
+                    navigate('/admin');
+                  }
+                }}
+                className="mt-2.5 w-full py-2.5 px-3 rounded-lg bg-royal hover:bg-royal/80 text-white font-semibold text-xs border border-royal/40 transition-colors shadow-sm text-center"
+              >
+                Enter Admin Console (1-Click Demo) &rarr;
+              </button>
             </div>
           )}
 
@@ -98,7 +120,7 @@ export default function AdminLogin() {
                   setEmail(e.target.value);
                   if (error) setError('');
                 }}
-                disabled={!isSupabaseConfigured || submitting}
+                disabled={submitting}
                 className="w-full px-4 py-3 rounded-xl bg-white/5 border border-white/15 text-white placeholder:text-white/60 text-sm focus:border-accent/50 disabled:opacity-50"
                 placeholder="you@ateknonsolutions.com"
               />
@@ -115,7 +137,7 @@ export default function AdminLogin() {
                   setPassword(e.target.value);
                   if (error) setError('');
                 }}
-                disabled={!isSupabaseConfigured || submitting}
+                disabled={submitting}
                 placeholder="••••••••"
               />
             </div>
@@ -128,7 +150,7 @@ export default function AdminLogin() {
 
             <button
               type="submit"
-              disabled={submitting || !isSupabaseConfigured}
+              disabled={submitting}
               className="btn-glow w-full bg-grad-primary text-white font-semibold px-6 py-3.5 rounded-xl hover:brightness-110 transition-all disabled:opacity-50"
             >
               {submitting ? 'Signing in…' : 'Sign In'}
