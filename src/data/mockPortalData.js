@@ -132,6 +132,16 @@ export const MOCK_PAYMENTS = [
   },
 ];
 
+export const MOCK_ADMIN_PROFILE = {
+  id: 'usr-admin-mukesh',
+  full_name: 'Mukesh',
+  email: 'mukesh@ateknonsolutions.com',
+  role: 'admin',
+  status: 'active',
+  title: 'Super Admin & Lead Executive',
+  department: 'Executive Leadership',
+};
+
 export const MOCK_ADMIN_STATS = {
   totalEnquiries: 148,
   todayEnquiries: 6,

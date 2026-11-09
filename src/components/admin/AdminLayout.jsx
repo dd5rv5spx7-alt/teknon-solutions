@@ -62,7 +62,11 @@ export default function AdminLayout() {
     }
   }
 
-  const adminEmail = session?.user?.email || 'admin@ateknonsolutions.com';
+  const isMukesh =
+    session?.user?.email?.toLowerCase().includes('mukesh') ||
+    session?.user?.user_metadata?.full_name?.toLowerCase() === 'mukesh';
+  const adminDisplayName = isMukesh ? 'Mukesh' : session?.user?.user_metadata?.full_name || 'Admin User';
+  const adminEmail = session?.user?.email || (isMukesh ? 'mukesh@ateknonsolutions.com' : 'admin@ateknonsolutions.com');
   const roleLabel = role === 'admin' ? 'Super Admin' : role || 'Faculty';
 
   return (
@@ -183,10 +187,10 @@ export default function AdminLayout() {
           <div className="flex items-center justify-between gap-3 p-2.5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 shadow-xs">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-royal to-indigo-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
-                {adminEmail.charAt(0).toUpperCase()}
+                {(isMukesh ? 'M' : adminEmail.charAt(0)).toUpperCase()}
               </div>
               <div className="min-w-0">
-                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{adminEmail}</p>
+                <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{adminDisplayName}</p>
                 <p className="text-[10px] font-mono text-royal dark:text-accent font-semibold">{roleLabel}</p>
               </div>
             </div>

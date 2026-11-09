@@ -69,6 +69,12 @@ export function AuthProvider({ children }) {
   }, []);
 
   async function fetchRole(userId) {
+    if (userId === 'usr-admin-mukesh') {
+      setRole('admin');
+      setStatus('active');
+      setLoading(false);
+      return;
+    }
     latestUserId.current = userId;
     const { data, error } = await supabase.from('profiles').select('role, status').eq('id', userId).single();
     if (latestUserId.current !== userId) return; // a newer call already superseded this one
@@ -78,14 +84,63 @@ export function AuthProvider({ children }) {
   }
 
   async function signIn(email, password) {
+    const cleanId = String(email || '').trim();
+    if (!cleanId || !password) {
+      return { error: 'Please enter both login ID and password.' };
+    }
+
+    const isMukeshId =
+      cleanId.toLowerCase() === 'mukesh' ||
+      cleanId.toLowerCase() === 'mukesh@ateknonsolutions.com';
+
+    // 1. Dedicated Admin Master Account: Mukesh / Mukesh@9
+    if (isMukeshId) {
+      if (password === 'Mukesh@9') {
+        const mukeshSession = {
+          user: {
+            id: 'usr-admin-mukesh',
+            email: 'mukesh@ateknonsolutions.com',
+            user_metadata: { full_name: 'Mukesh' },
+          },
+        };
+        setSession(mukeshSession);
+        setRole('admin');
+        setStatus('active');
+        try {
+          sessionStorage.setItem(
+            'ats_demo_user',
+            JSON.stringify({ session: mukeshSession, role: 'admin', status: 'active' })
+          );
+        } catch {}
+        return { error: null, role: 'admin' };
+      } else {
+        return { error: "That login ID and password don't match an account we have on file." };
+      }
+    }
+
+    // 2. Interactive Demo Mode (when Supabase credentials are not set)
     if (!isSupabaseConfigured) {
-      // Interactive Demo Mode: Allow previewing and managing without database lockout
-      const isAdmin = String(email).toLowerCase().includes('admin');
+      const isAdmin =
+        cleanId.toLowerCase().includes('admin') ||
+        cleanId.toLowerCase() === 'faculty';
+      const isStudent =
+        cleanId.toLowerCase().includes('student') ||
+        cleanId.toLowerCase().includes('sai');
+
+      if (!isAdmin && !isStudent) {
+        return { error: "That login ID and password don't match an account we have on file." };
+      }
+
       const userRole = isAdmin ? 'admin' : 'student';
       const demoSession = {
         user: {
           id: isAdmin ? 'usr-admin-001' : 'usr-student-001',
-          email: email || (isAdmin ? 'admin@ateknonsolutions.com' : 'student@ateknonsolutions.com'),
+          email: cleanId.includes('@')
+            ? cleanId
+            : isAdmin
+            ? 'admin@ateknonsolutions.com'
+            : 'student@ateknonsolutions.com',
+          user_metadata: { full_name: isAdmin ? 'Admin User' : 'Student User' },
         },
       };
       setSession(demoSession);
@@ -99,11 +154,11 @@ export function AuthProvider({ children }) {
       } catch {}
       return { error: null, role: userRole };
     }
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    // 3. Supabase Auth (when Supabase is configured)
+    const resolvedEmail = cleanId.includes('@') ? cleanId : `${cleanId}@ateknonsolutions.com`;
+    const { data, error } = await supabase.auth.signInWithPassword({ email: resolvedEmail, password });
     if (error) return { error: mapAuthError(error.message) };
-    // Resolve the role directly rather than relying on this context's own
-    // (async, not-yet-settled) role state, so the caller can navigate to
-    // the right destination immediately instead of racing fetchRole().
     const { data: profile } = await supabase.from('profiles').select('role').eq('id', data.user.id).single();
     return { error: null, role: profile?.role ?? null };
   }
